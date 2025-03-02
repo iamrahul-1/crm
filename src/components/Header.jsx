@@ -1,19 +1,9 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
 import Navigation from "./Navigation";
 import logo from "./../assets/logo.png";
 
 const Header = () => {
-  const darkMode = useSelector((state) => state.theme.darkMode);
   const [isOpen, setIsOpen] = useState(false);
-
-  React.useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -21,15 +11,14 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 md:left-52 right-0 shadow-md z-50 h-[60px] md:h-[100px] ${
-        darkMode ? "bg-gray-900" : "bg-white"
+      className={`fixed top-0 left-0 md:left-52 right-0 shadow-md z-50 h-[60px] md:h-[100px] bg-white
       }`}
     >
       <div className="container mx-auto px-4 h-full">
         <div className="flex items-center justify-start h-full">
           <button
             onClick={toggleMenu}
-            className={`md:hidden p-2${darkMode ? "text-white" : "text-black"}`}
+            className={`md:hidden p-2 text-white`}
             aria-label="Toggle Navigation"
           >
             <svg
@@ -49,9 +38,7 @@ const Header = () => {
           </button>
 
           <h1
-            className={` flex items-center gap-4   text-2xl md:text-4xl mx-auto font-bold ${
-              darkMode ? "text-white" : "text-gray-800"
-            }`}
+            className={` flex items-center gap-4   text-2xl md:text-4xl mx-auto font-boldtext-white `}
           >
             <img className="h-11 md:h-20 w-auto" src={logo} />
             SHATRANJ CRM
