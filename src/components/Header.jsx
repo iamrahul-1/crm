@@ -38,7 +38,7 @@ const Header = () => {
           </button>
 
           <h1
-            className={` flex items-center gap-4   text-2xl md:text-4xl mx-auto font-boldtext-white `}
+            className={` flex items-center gap-4   text-2xl md:text-4xl mx-auto font-bold text-white `}
           >
             <img className="h-11 md:h-20 w-auto" src={logo} />
             SHATRANJ CRM

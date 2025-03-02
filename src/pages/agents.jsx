@@ -1,6 +1,5 @@
 import { AgGridReact } from "ag-grid-react";
 import { useState, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
 import axios from "axios";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import React from "react";
@@ -9,7 +8,6 @@ import React from "react";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const Agents = () => {
-  const darkMode = useSelector((state) => state.theme.darkMode);
   const [searchText, setSearchText] = useState("");
   const [leads, setLeads] = useState([]);
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
@@ -103,9 +101,8 @@ const Agents = () => {
 
   return (
     <div
-      className={`md:ml-52 mt-[60px] md:mt-[100px] px-4 md:px-6 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-      } min-h-screen`}
+      className={`md:ml-52 mt-[60px] md:mt-[100px] px-4 md:px-6 bg-white text-black
+      min-h-screen`}
     >
       <div className="flex justify-between md:flex-row flex-col items-center mb-6 pt-4">
         <h2 className="text-2xl md:text-2xl pb-3 font-semibold">Agents</h2>
@@ -126,7 +123,7 @@ const Agents = () => {
       />
 
       <div
-        className={`ag-theme-alpine${darkMode ? "-dark" : ""}`}
+        className={`ag-theme-alpine`}
         style={{ height: "70vh", width: "100%" }}
       >
         {filteredLeads.length > 0 ? (

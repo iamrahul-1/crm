@@ -19,7 +19,7 @@ const PieChart = () => {
         position: "bottom",
         item: {
           label: {
-            color: "white",
+            color: "black",
             fontSize: 13,
             fontFamily: "Arial",
           },
@@ -31,7 +31,7 @@ const PieChart = () => {
           angleKey: "amount",
           calloutLabelKey: "asset",
           calloutLabel: {
-            color: "white",
+            color: "black",
           },
           legendItemKey: "asset",
           fills: ["#39D300", "#E94A4A", "#75B9DD", "#FFB013", "#F7F700"],
