@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { toggleDarkMode } from "../redux/ThemeSlice";
+import { useSelector } from "react-redux";
 import Navigation from "./Navigation";
 import logo from "./../assets/logo.png";
 
 const Header = () => {
   const darkMode = useSelector((state) => state.theme.darkMode);
-  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
 
   React.useEffect(() => {
