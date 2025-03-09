@@ -8,7 +8,6 @@ import React from "react";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const Agents = () => {
-  const [darkMode, setDarkMode] = useState(false); // Replaced Redux state
   const [searchText, setSearchText] = useState("");
   const [leads, setLeads] = useState([]);
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
@@ -101,11 +100,7 @@ const Agents = () => {
   };
 
   return (
-    <div
-      className={`md:ml-52 mt-[60px] md:mt-[100px] px-4 md:px-6 ${
-        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-      } min-h-screen`}
-    >
+    <div className="md:ml-52 mt-[60px] md:mt-[100px] px-4 md:px-6 min-h-screen bg-white text-black">
       <div className="flex justify-between md:flex-row flex-col items-center mb-6 pt-4">
         <h2 className="text-2xl md:text-2xl text-gray-800 font-bold">
           Channel Partner
@@ -127,7 +122,7 @@ const Agents = () => {
       />
 
       <div
-        className={`ag-theme-alpine${darkMode ? "-dark" : ""}`}
+        className="ag-theme-alpine"
         style={{ height: "70vh", width: "100%" }}
       >
         {filteredLeads.length > 0 ? (
