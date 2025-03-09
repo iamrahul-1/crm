@@ -1,82 +1,46 @@
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import { useSelector } from "react-redux";
-
-// // Define navigation links array
-// const navLinks = [
-//   { id: 1, path: "/", label: "Dashboard" },
-//   { id: 2, path: "/clients", label: "Clients" },
-//   { id: 3, path: "/agents", label: "Agents" },
-//   { id: 4, path: "/profile", label: "Profile" },
-//   { id: 5, path: "/settings", label: "Settings" },
-//   { id: 6, path: "/logout", label: "Logout" },
-// ];
-
-// function Navigation({ isOpen, toggleMenu }) {
-//   const darkMode = useSelector((state) => state.theme.darkMode);
-
-//   return (
-//     <div>
-//       {/* Navigation Links */}
-//       <nav
-//         className={`fixed left-0 top-[60px] h-[calc(100vh-60px)] w-44 ${
-//           darkMode ? "bg-gray-800" : "bg-gray-50"
-//         } p-5 shadow-md transition-transform duration-300 ease-in-out md:translate-x-0 ${
-//           isOpen ? "translate-x-0" : "-translate-x-full"
-//         }`}
-//       >
-//         <ul className="list-none m-0 p-0 h-full flex flex-col justify-between">
-//           {navLinks.map((link) => (
-//             <li key={link.id} className="my-3">
-//               <Link
-//                 to={link.path}
-//                 className={`block p-3 rounded-lg text-gray-700 ${
-//                   darkMode ? "dark:text-white" : "text-gray-700"
-//                 } hover:text-gray-900 dark:hover:text-white text-base no-underline`}
-//                 onClick={toggleMenu} // Close menu on link click
-//               >
-//                 {link.label}
-//               </Link>
-//             </li>
-//           ))}
-//         </ul>
-//       </nav>
-//     </div>
-//   );
-// }
-
-// export default Navigation;
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaTimes,
   FaTachometerAlt,
   FaUserFriends,
-  FaUserTie,
   FaUser,
   FaCog,
   FaSignOutAlt,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import { HiOutlineClipboardList } from "react-icons/hi";
 
-const navLinks = [
-  { id: 1, path: "/", label: "Dashboard", icon: <FaTachometerAlt /> },
+const leadDropdownLinks = [
+  { id: 1, path: "/leads/all", label: "All Leads" },
+  { id: 2, path: "/leads/new", label: "New Leads" },
+  { id: 3, path: "/leads/add", label: "Add Leads" },
+  { id: 4, path: "/leads/rejected", label: "Rejected Leads" },
   {
-    id: 2,
-    path: "/clients",
-    label: "Clients",
-    icon: <HiOutlineClipboardList />,
+    id: 5,
+    path: "/leads/schedule",
+    label: "Schedule Visits",
+    subLinks: [
+      { id: 6, path: "/leads/schedule/add", label: "Add Leads" },
+      { id: 7, path: "/leads/schedule/delete", label: "Delete Leads" },
+    ],
   },
-  { id: 3, path: "/agents", label: "Agents", icon: <FaUserFriends /> },
+];
+
+const navLinks = [
+  { id: 3, path: "/agents", label: "Channel Partner", icon: <FaUserFriends /> },
   { id: 4, path: "/profile", label: "Profile", icon: <FaUser /> },
   { id: 5, path: "/settings", label: "Settings", icon: <FaCog /> },
   { id: 6, path: "/logout", label: "Logout", icon: <FaSignOutAlt /> },
 ];
 
 function Navigation({ isOpen, toggleMenu }) {
+  const [isLeadsOpen, setLeadsOpen] = useState(false);
+  const [isScheduleOpen, setScheduleOpen] = useState(false);
+
   return (
     <div>
-      {/* Sidebar Navigation */}
       <nav
         className={`fixed left-0 top-0 h-screen w-52 bg-gray-100 text-gray-800 p-5 shadow-lg transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -91,11 +55,91 @@ function Navigation({ isOpen, toggleMenu }) {
         </button>
 
         <ul className="mt-8 space-y-4">
+          {/* Dashboard */}
+          <li>
+            <Link
+              to="/"
+              className="flex items-center gap-3 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              onClick={toggleMenu}
+            >
+              <span className="text-xl">
+                <FaTachometerAlt />
+              </span>
+              <span>Dashboard</span>
+            </Link>
+          </li>
+
+          {/* Leads Dropdown Below Dashboard */}
+          <li>
+            <button
+              className="flex items-center justify-between w-full py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+              onClick={() => setLeadsOpen(!isLeadsOpen)}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">
+                  <HiOutlineClipboardList />
+                </span>
+                <span>Leads</span>
+              </div>
+              <span>{isLeadsOpen ? <FaChevronUp /> : <FaChevronDown />}</span>
+            </button>
+
+            {isLeadsOpen && (
+              <ul className="mt-2 ml-6 space-y-2">
+                {leadDropdownLinks.map((subLink) => (
+                  <li key={subLink.id}>
+                    {subLink.subLinks ? (
+                      <>
+                        <button
+                          className="flex items-center justify-between w-full py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+                          onClick={() => setScheduleOpen(!isScheduleOpen)}
+                        >
+                          <span>{subLink.label}</span>
+                          <span>
+                            {isScheduleOpen ? (
+                              <FaChevronUp />
+                            ) : (
+                              <FaChevronDown />
+                            )}
+                          </span>
+                        </button>
+                        {isScheduleOpen && (
+                          <ul className="mt-2 ml-6 space-y-2">
+                            {subLink.subLinks.map((nestedLink) => (
+                              <li key={nestedLink.id}>
+                                <Link
+                                  to={nestedLink.path}
+                                  className="block py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+                                  onClick={toggleMenu}
+                                >
+                                  {nestedLink.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ) : (
+                      <Link
+                        to={subLink.path}
+                        className="block py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
+                        onClick={toggleMenu}
+                      >
+                        {subLink.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+
+          {/* Other Navigation Links */}
           {navLinks.map((link) => (
             <li key={link.id}>
               <Link
                 to={link.path}
-                className="flex items-center gap-3 py-2.5 px-4 rounded-lg text-lg font-medium hover:bg-gray-300 transition"
+                className="flex items-center gap-3 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-300 transition"
                 onClick={toggleMenu}
               >
                 <span className="text-xl">{link.icon}</span>

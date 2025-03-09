@@ -1,5 +1,6 @@
 import { AgGridReact } from "ag-grid-react";
 import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import React from "react";
@@ -8,6 +9,7 @@ import React from "react";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const Agents = () => {
+  const darkMode = useSelector((state) => state.theme.darkMode);
   const [searchText, setSearchText] = useState("");
   const [leads, setLeads] = useState([]);
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
@@ -101,16 +103,19 @@ const Agents = () => {
 
   return (
     <div
-      className={`md:ml-52 mt-[60px] md:mt-[100px] px-4 md:px-6 bg-white text-black
-      min-h-screen`}
+      className={`md:ml-52 mt-[60px] md:mt-[100px] px-4 md:px-6 ${
+        darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
+      } min-h-screen`}
     >
       <div className="flex justify-between md:flex-row flex-col items-center mb-6 pt-4">
-        <h2 className="text-2xl md:text-2xl pb-3 font-semibold">Agents</h2>
+        <h2 className="text-2xl md:text-2xl text-gray-800 font-bold">
+          Channel Partner
+        </h2>
         <button
           onClick={() => setIsNewLeadModalOpen(true)}
           className="bg-black text-white px-3 py-1 md:px-4 md:py-2 rounded-lg hover:scale-105"
         >
-          Add New Lead
+          Add New Partner
         </button>
       </div>
 
@@ -123,7 +128,7 @@ const Agents = () => {
       />
 
       <div
-        className={`ag-theme-alpine`}
+        className={`ag-theme-alpine${darkMode ? "-dark" : ""}`}
         style={{ height: "70vh", width: "100%" }}
       >
         {filteredLeads.length > 0 ? (

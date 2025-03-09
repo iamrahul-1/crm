@@ -1,6 +1,11 @@
 @import "tailwindcss";
 /* Add custom styles if needed */
 
+html.dark {
+  --bg-color: #101828; /* Dark background color */
+  --text-color: #ffffff; /* Light text color */
+}
+
 html {
   --bg-color: #ffffff; /* Light background color */
   --text-color: #000000; /* Dark text color */

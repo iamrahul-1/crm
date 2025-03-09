@@ -1,19 +1,23 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Clients from "./pages/clients";
-import PieChart from "./components/piechart";
+import PieChart from "./components/dashboard";
 import Agents from "./pages/agents";
 import Profile from "./pages/Profile";
 import Setting from "./pages/Setting";
 
 function App() {
+  const darkMode = useSelector((state) => state.theme.darkMode);
+
   return (
-    <div>
+    <div className={darkMode ? "dark" : ""}>
       <div
-        className={`min-h-screen bg-gray-100 text-gray-900
-        `}
+        className={`min-h-screen bg-gray-100 text-gray-900 ${
+          darkMode ? "dark:bg-gray-900 dark:text-white" : "bg-white text-black"
+        }`}
       >
         <Router>
           <Header />
