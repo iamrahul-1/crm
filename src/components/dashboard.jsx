@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AgCharts } from "ag-charts-react";
+import { BiBorderRadius } from "react-icons/bi";
 
 const Dashboard = () => {
   const [options1, setOptions1] = useState({});
@@ -22,7 +23,7 @@ const Dashboard = () => {
   useEffect(() => {
     const commonOptions = {
       background: {
-        fill: "#fff",
+        fill: "#f3f4f7",
       },
       legend: {
         position: "bottom",
@@ -68,7 +69,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="md:ml-52 mt-[60px] md:mt-[120px] flex flex-col h-full md:px-8">
+    <div className="md:ml-52 pt-[60px] md:pt-[120px] flex flex-col h-full md:px-8">
       {/* Dashboard Title */}
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
 

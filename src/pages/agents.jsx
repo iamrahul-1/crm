@@ -1,6 +1,5 @@
 import { AgGridReact } from "ag-grid-react";
 import { useState, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
 import axios from "axios";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import React from "react";
@@ -9,7 +8,7 @@ import React from "react";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const Agents = () => {
-  const darkMode = useSelector((state) => state.theme.darkMode);
+  const [darkMode, setDarkMode] = useState(false); // Replaced Redux state
   const [searchText, setSearchText] = useState("");
   const [leads, setLeads] = useState([]);
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
@@ -223,7 +222,6 @@ const LeadModal = ({
           <input
             type="text"
             name="name"
-            placeholder="Name"
             value={formData.name}
             onChange={handleChange}
             className="border px-2 py-1 rounded"
@@ -232,7 +230,6 @@ const LeadModal = ({
           <input
             type="email"
             name="email"
-            placeholder="Email"
             value={formData.email}
             onChange={handleChange}
             className="border px-2 py-1 rounded"
@@ -241,39 +238,18 @@ const LeadModal = ({
           <input
             type="text"
             name="occupation"
-            placeholder="Occupation"
             value={formData.occupation}
             onChange={handleChange}
             className="border px-2 py-1 rounded"
             disabled={isReadOnly}
           />
-          <select
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            className="border px-2 py-1 rounded"
-            disabled={isReadOnly}
-          >
-            <option value="New">New</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Closed">Closed</option>
-          </select>
           <textarea
             name="remarks"
-            placeholder="Remarks"
             value={formData.remarks}
             onChange={handleChange}
             className="border px-2 py-1 rounded"
             disabled={isReadOnly}
           />
-          {!isReadOnly && (
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-1 rounded"
-            >
-              {isEditable ? "Update" : "Submit"}
-            </button>
-          )}
           <button
             onClick={closeModal}
             className="bg-gray-400 text-black px-4 py-1 rounded"
