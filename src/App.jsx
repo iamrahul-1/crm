@@ -1,6 +1,5 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useSelector } from "react-redux";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Clients from "./pages/clients";
@@ -10,15 +9,9 @@ import Profile from "./pages/Profile";
 import Setting from "./pages/Setting";
 
 function App() {
-  const darkMode = useSelector((state) => state.theme.darkMode);
-
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div
-        className={`min-h-screen bg-gray-100 text-gray-900 ${
-          darkMode ? "dark:bg-gray-900 dark:text-white" : "bg-white text-black"
-        }`}
-      >
+    <div>
+      <div className={"min-h-screen bg-gray-100 text-black"}>
         <Router>
           <Header />
           <Navigation />

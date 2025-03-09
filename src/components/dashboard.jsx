@@ -65,7 +65,7 @@ const Dashboard = () => {
         },
       ],
     });
-  });
+  }, []);
 
   return (
     <div className="md:ml-52 mt-[60px] md:mt-[120px] flex flex-col h-full md:px-8">
