@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { AgCharts } from "ag-charts-react";
-import { BiBorderRadius } from "react-icons/bi";
 
 const Dashboard = () => {
   const [options1, setOptions1] = useState({});
@@ -16,8 +15,8 @@ const Dashboard = () => {
   // Second chart data (Different from first chart)
   const getData2 = () => [
     { asset: "Today", amount: 50 },
-    { asset: "Missed", amount: 15 },
-    { asset: "Favourite", amount: 15 },
+    { asset: "Missed", amount: 50 },
+    { asset: "Favourite", amount: 50 },
   ];
 
   useEffect(() => {
@@ -69,15 +68,14 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="md:ml-52 pt-[60px] md:pt-[120px] flex flex-col h-full md:px-8">
+    <div className="md:ml-52 pt-[60px] md:pt-[120px] flex flex-col h-full px-4 md:px-8">
       {/* Dashboard Title */}
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6 px-2">Dashboard</h1>
 
       {/* New Leads Section */}
       <div className="p-4 bg-gray-100 rounded-lg shadow-md w-full mb-6">
-        {/* <h2 className="text-gray-700 font-bold text-lg mb-4">New Leads</h2> */}
-        <div className="flex justify-between">
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-72">
+        <div className="flex flex-col md:flex-row gap-4 md:justify-between">
+          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-full md:w-72">
             <div className="flex items-center gap-3">
               <div className="h-10 w-1 bg-emerald-700 rounded-full" />
               <span className="text-gray-800 font-semibold text-lg">Today</span>
@@ -86,7 +84,7 @@ const Dashboard = () => {
               50
             </div>
           </div>
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-72">
+          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-full md:w-72">
             <div className="flex items-center gap-3">
               <div className="h-10 w-1 bg-gray-500 rounded-full" />
               <span className="text-gray-800 font-semibold text-lg">
@@ -97,7 +95,7 @@ const Dashboard = () => {
               50
             </div>
           </div>
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-72">
+          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-full md:w-72">
             <div className="flex items-center gap-3">
               <div className="h-10 w-1 bg-pink-500 rounded-full" />
               <span className="text-gray-800 font-semibold text-lg">
@@ -112,60 +110,64 @@ const Dashboard = () => {
       </div>
 
       {/* Hot, Warm, Cold Leads + Charts Side by Side */}
-      <div className="flex flex-col md:flex-row justify-between w-full max-w-6xl gap-6">
+      <div className="flex flex-col lg:flex-row justify-between w-full gap-6">
         {/* Left - Hot, Warm, Cold Leads */}
-        <div className="p-4 bg-gray-100 rounded-lg shadow-md w-80">
+        <div className="p-4 bg-gray-100 rounded-lg shadow-md w-full lg:w-80">
           <h2 className="text-gray-700 font-bold text-lg mb-4">Type Of Lead</h2>
 
-          {/* Hot Lead */}
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 mb-2 w-72">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-1 bg-red-500 rounded-full" />
-              <span className="text-gray-800 font-semibold text-lg">
-                Hot Lead
-              </span>
+          <div className="flex flex-col gap-2">
+            {/* Lead items remain the same, just update their width */}
+            <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-full">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-1 bg-red-500 rounded-full" />
+                <span className="text-gray-800 font-semibold text-lg">
+                  Hot Lead
+                </span>
+              </div>
+              <div className="h-8 w-8 flex items-center justify-center bg-red-500 text-white text-lg rounded-md">
+                4
+              </div>
             </div>
-            <div className="h-8 w-8 flex items-center justify-center bg-red-500 text-white text-lg rounded-md">
-              4
-            </div>
-          </div>
 
-          {/* Warm Lead */}
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 mb-2 w-72">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-1 bg-orange-500 rounded-full" />
-              <span className="text-gray-800 font-semibold text-lg">
-                Warm Lead
-              </span>
+            <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-full">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-1 bg-orange-500 rounded-full" />
+                <span className="text-gray-800 font-semibold text-lg">
+                  Warm Lead
+                </span>
+              </div>
+              <div className="h-8 w-8 flex items-center justify-center bg-orange-500 text-white text-lg rounded-md">
+                46
+              </div>
             </div>
-            <div className="h-8 w-8 flex items-center justify-center bg-orange-500 text-white text-lg rounded-md">
-              46
-            </div>
-          </div>
 
-          {/* Cold Lead */}
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-72">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-1 bg-blue-500 rounded-full" />
-              <span className="text-gray-800 font-semibold text-lg">
-                Cold Lead
-              </span>
-            </div>
-            <div className="h-8 w-8 flex items-center justify-center bg-blue-500 text-white text-lg rounded-md">
-              38
+            <div className="flex items-center justify-between bg-white shadow rounded-lg p-3 w-full">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-1 bg-blue-500 rounded-full" />
+                <span className="text-gray-800 font-semibold text-lg">
+                  Cold Lead
+                </span>
+              </div>
+              <div className="h-8 w-8 flex items-center justify-center bg-blue-500 text-white text-lg rounded-md">
+                38
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right - Two Different Charts */}
-        <div className="flex justify-around items-center h-full w-full">
-          <div className="flex flex-col items-center">
-            <AgCharts options={options1} className="w-full h-[70%]" />
-            <h1 className="text-xl">Leads Status</h1>
+        <div className="flex flex-col md:flex-row justify-around items-center gap-6 flex-1 bg-gray-100 p-4 rounded-lg shadow-md">
+          <div className="flex flex-col items-center w-full md:w-1/2">
+            <div className="w-full h-[300px]">
+              <AgCharts options={options1} />
+            </div>
+            <h2 className="text-xl font-semibold mt-4">Leads Status</h2>
           </div>
-          <div className="flex flex-col items-center">
-            <AgCharts options={options2} className="w-full h-[70%]" />
-            <h1 className="text-xl">Chart 2</h1>
+          <div className="flex flex-col items-center w-full md:w-1/2">
+            <div className="w-full h-[300px]">
+              <AgCharts options={options2} />
+            </div>
+            <h2 className="text-xl font-semibold mt-4">Lead Distribution</h2>
           </div>
         </div>
       </div>
