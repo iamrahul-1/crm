@@ -16,7 +16,7 @@ import NewLeads from "./pages/NewLeads";
 import RejectedLeads from "./pages/RejectedLeads";
 import MissedLeads from "./pages/missed";
 import FavoriteLeads from "./pages/fav";
-import Agents from "./pages/Agents";
+import Agents from "./pages/agents";
 
 function App() {
   return (
