@@ -12,7 +12,6 @@ import RemarksModal from "../components/RemarksModal";
 
 const NewLeads = () => {
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState({});
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,11 +67,6 @@ const NewLeads = () => {
     try {
       const isFavorite = !lead.favourite;
       await api.put(`/leads/${id}`, { favourite: isFavorite });
-      
-      setFavorites((prev) => ({
-        ...prev,
-        [id]: isFavorite,
-      }));
 
       setLeads(leads.map(l => 
         l._id === id ? { ...l, favourite: isFavorite } : l
