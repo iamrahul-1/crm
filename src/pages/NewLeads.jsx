@@ -34,9 +34,9 @@ const NewLeads = () => {
         setTotalPages(response.data.totalPages || 1);
         setLoading(false);
       } catch (error) {
-        setError("Failed to fetch new leads");
+        setError("Failed to fetch open leads");
         setLoading(false);
-        toast.error("Failed to fetch new leads. Please try again later.");
+        toast.error("Failed to fetch open leads. Please try again later.");
         console.error(error);
       }
     };
@@ -64,17 +64,28 @@ const NewLeads = () => {
     setCurrentPage(newPage);
   };
 
-  const toggleFavorite = (id) => {
-    const isFavorite = !favorites[id];
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: isFavorite,
-    }));
+  const toggleFavorite = async (id, lead) => {
+    try {
+      const isFavorite = !lead.favourite;
+      await api.put(`/leads/${id}`, { favourite: isFavorite });
+      
+      setFavorites((prev) => ({
+        ...prev,
+        [id]: isFavorite,
+      }));
 
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`, // Prevent duplicate toasts
-    });
+      setLeads(leads.map(l => 
+        l._id === id ? { ...l, favourite: isFavorite } : l
+      ));
+
+      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
+        type: isFavorite ? "success" : "info",
+        toastId: `favorite-${id}`,
+      });
+    } catch (err) {
+      toast.error("Failed to update favorite status");
+      console.error(err);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -140,13 +151,13 @@ const NewLeads = () => {
             <FiTrash2 size={18} />
           </button>
           <button
-            onClick={() => toggleFavorite(row._id)}
+            onClick={() => toggleFavorite(row._id, row)}
             className="p-1.5 rounded-lg transition-colors"
             title={
-              favorites[row._id] ? "Remove from favorites" : "Add to favorites"
+              row.favourite ? "Remove from favorites" : "Add to favorites"
             }
           >
-            {favorites[row._id] ? (
+            {row.favourite ? (
               <AiFillHeart size={20} className="text-red-500" />
             ) : (
               <AiOutlineHeart
@@ -177,7 +188,7 @@ const NewLeads = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
               <h1 className="text-2xl font-semibold text-gray-900">
-                New Leads
+                Open Leads
               </h1>
               <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
                 <FiSearch className="w-5 h-5 text-gray-500" />
@@ -191,7 +202,7 @@ const NewLeads = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Search new leads..."
+                  placeholder="Search open leads..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"

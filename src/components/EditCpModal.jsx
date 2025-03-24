@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { FiX } from "react-icons/fi";
+import {
+  FiX,
+  FiUser,
+  FiPhone,
+  FiBriefcase,
+  FiCalendar,
+} from "react-icons/fi";
 
 const EditCpModal = ({ cp, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -12,150 +18,241 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
       ? new Date(cp.date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0],
   });
+  const [errors, setErrors] = useState({});
+  const [dirtyFields, setDirtyFields] = useState({});
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
+  const validatePhone = (phone) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Mark field as dirty on first change
+    if (!dirtyFields[name]) {
+      setDirtyFields((prev) => ({
+        ...prev,
+        [name]: true,
+      }));
+    }
+
+    if (name === "phone") {
+      const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+      // Convert to number for the backend
+      const phoneNumber = sanitizedValue ? parseInt(sanitizedValue, 10) : "";
+      setFormData((prev) => ({ ...prev, [name]: phoneNumber }));
+
+      if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
+        setErrors((prev) => ({
+          ...prev,
+          phone: "Phone number must be 10 digits",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, phone: "" }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate required fields and phone number
+    const requiredFields = ["name", "phone", "role"];
+    const newErrors = {};
+    requiredFields.forEach((field) => {
+      const value = formData[field];
+      if (!value || (typeof value === "string" && !value.trim())) {
+        newErrors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is required`;
+      }
+    });
+
+    // Add phone validation
+    if (!validatePhone(formData.phone.toString())) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    onSave(formData);
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"></div>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
+        <div className="flex justify-between items-center p-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Edit Channel Partner</h2>
+            <p className="text-sm text-gray-500">
+              Update channel partner information
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            <FiX className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                Edit Channel Partner
-              </h3>
-              <button
-                onClick={onClose}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <FiX className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
+        <div className="p-6 pt-0 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Personal Information */}
+            <div className="bg-white rounded-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-blue-50 rounded-lg">
+                  <FiUser className="w-5 h-5 text-blue-600" />
+                </div>
+                <h2 className="text-base font-medium text-gray-800">
+                  Personal Information
+                </h2>
+              </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name Input */}
                 <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label className="block text-sm text-gray-600 mb-2">
                     Name
                   </label>
                   <input
                     type="text"
-                    id="name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
+                    placeholder="Enter full name"
+                    className={`w-full px-3 py-2.5 bg-white border ${
+                      dirtyFields.name && errors.name
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg text-sm text-gray-800`}
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
+                  {dirtyFields.name && errors.name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  )}
                 </div>
 
+                {/* Phone Input */}
                 <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Phone Number
                   </label>
-                  <input
-                    type="text"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <div className="relative">
+                    <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone ? formData.phone.toString() : ""}
+                      onChange={handleChange}
+                      placeholder="Enter 10 digit number"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
+                        dirtyFields.phone && errors.phone
+                          ? "border-red-500"
+                          : "border-gray-200"
+                      } rounded-lg text-sm text-gray-800`}
+                      required
+                    />
+                  </div>
+                  {dirtyFields.phone && errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
                 </div>
+              </div>
+            </div>
 
+            {/* Role Information */}
+            <div className="bg-white rounded-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-green-50 rounded-lg">
+                  <FiBriefcase className="w-5 h-5 text-green-600" />
+                </div>
+                <h2 className="text-base font-medium text-gray-800">
+                  Role Information
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Role Selection */}
                 <div>
-                  <label
-                    htmlFor="role"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label className="block text-sm text-gray-600 mb-2">
                     Role
                   </label>
                   <select
-                    id="role"
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="individual">Individual</option>
                     <option value="company">Company</option>
                   </select>
                 </div>
 
+                {/* Company Role - Conditional */}
                 {formData.role === "company" && (
                   <div>
-                    <label
-                      htmlFor="companyRole"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label className="block text-sm text-gray-600 mb-2">
                       Company Role
                     </label>
                     <input
                       type="text"
-                      id="companyRole"
                       name="companyRole"
                       value={formData.companyRole}
                       onChange={handleChange}
+                      placeholder="Enter company role"
+                      className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 )}
 
+                {/* Date Input */}
                 <div>
-                  <label
-                    htmlFor="date"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label className="block text-sm text-gray-600 mb-2">
                     Date
                   </label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <div className="relative">
+                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className="flex items-center justify-end gap-3 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -165,7 +262,7 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
 EditCpModal.propTypes = {
   cp: PropTypes.shape({
     name: PropTypes.string,
-    phone: PropTypes.string,
+    phone: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     role: PropTypes.string,
     companyRole: PropTypes.string,
     date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),

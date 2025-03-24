@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
@@ -11,7 +10,6 @@ import RemarksModal from "../components/RemarksModal";
 
 const MissedLeads = () => {
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState({});
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,19 +59,6 @@ const MissedLeads = () => {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-  };
-
-  const toggleFavorite = (id) => {
-    const isFavorite = !favorites[id];
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: isFavorite,
-    }));
-
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`,
-    });
   };
 
   const handleDelete = async (id) => {
@@ -137,22 +122,6 @@ const MissedLeads = () => {
             title="Delete"
           >
             <FiTrash2 size={18} />
-          </button>
-          <button
-            onClick={() => toggleFavorite(row._id)}
-            className="p-1.5 rounded-lg transition-colors"
-            title={
-              favorites[row._id] ? "Remove from favorites" : "Add to favorites"
-            }
-          >
-            {favorites[row._id] ? (
-              <AiFillHeart size={20} className="text-red-500" />
-            ) : (
-              <AiOutlineHeart
-                size={20}
-                className="text-gray-400 hover:text-red-500"
-              />
-            )}
           </button>
         </div>
       ),

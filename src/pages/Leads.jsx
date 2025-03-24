@@ -11,7 +11,6 @@ import RemarksModal from "../components/RemarksModal";
 
 const Leads = () => {
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState({});
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,17 +60,23 @@ const Leads = () => {
     setCurrentPage(newPage);
   };
 
-  const toggleFavorite = (id) => {
-    const isFavorite = !favorites[id];
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: isFavorite,
-    }));
+  const toggleFavorite = async (id, lead) => {
+    try {
+      const isFavorite = !lead.favourite;
+      await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`, // Prevent duplicate toasts
-    });
+      setLeads(leads.map(l => 
+        l._id === id ? { ...l, favourite: isFavorite } : l
+      ));
+
+      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
+        type: isFavorite ? "success" : "info",
+        toastId: `favorite-${id}`,
+      });
+    } catch (err) {
+      toast.error("Failed to update favorite status");
+      console.error(err);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -136,13 +141,13 @@ const Leads = () => {
             <FiTrash2 size={18} />
           </button>
           <button
-            onClick={() => toggleFavorite(row._id)}
+            onClick={() => toggleFavorite(row._id, row)}
             className="p-1.5 rounded-lg transition-colors"
             title={
-              favorites[row._id] ? "Remove from favorites" : "Add to favorites"
+              row.favourite ? "Remove from favorites" : "Add to favorites"
             }
           >
-            {favorites[row._id] ? (
+            {row.favourite ? (
               <AiFillHeart size={20} className="text-red-500" />
             ) : (
               <AiOutlineHeart
