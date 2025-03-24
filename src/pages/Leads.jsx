@@ -172,10 +172,9 @@ const Leads = () => {
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <h1 className="text-2xl font-semibold text-gray-900">All Leads</h1>
-              <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
-                <FiSearch className="w-5 h-5 text-gray-500" />
-              </button>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                All Leads
+              </h1>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative flex-1 sm:max-w-md">
