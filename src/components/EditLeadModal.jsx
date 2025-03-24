@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { FiX } from "react-icons/fi";
+import {
+  FiX,
+  FiUser,
+  FiPhone,
+  FiTarget,
+  FiMessageSquare,
+  FiClock,
+} from "react-icons/fi";
 import PropTypes from "prop-types";
 
 const EditLeadModal = ({ lead, onClose, onSave }) => {
@@ -8,9 +15,12 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     phone: lead.phone,
     purpose: lead.purpose,
     remarks: lead.remarks,
-    status: lead.status,
+    potential: lead.potential || ["warm"],
+    status: lead.status || ["open"],
+    time: lead.time || "",
   });
   const [errors, setErrors] = useState({});
+  const [dirtyFields, setDirtyFields] = useState({});
 
   const validatePhone = (phone) => {
     const phoneRegex = /^\d{10}$/;
@@ -20,12 +30,20 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "phone") {
-      // Only allow digits and limit to 10 characters
-      const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
-      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
+    // Mark field as dirty on first change
+    if (!dirtyFields[name]) {
+      setDirtyFields((prev) => ({
+        ...prev,
+        [name]: true,
+      }));
+    }
 
-      // Set error if phone is not exactly 10 digits
+    if (name === "phone") {
+      const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+      // Convert to number for the backend
+      const phoneNumber = sanitizedValue ? parseInt(sanitizedValue, 10) : "";
+      setFormData((prev) => ({ ...prev, [name]: phoneNumber }));
+
       if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
         setErrors((prev) => ({
           ...prev,
@@ -34,20 +52,49 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
       } else {
         setErrors((prev) => ({ ...prev, phone: "" }));
       }
+    } else if (name === "potential" || name === "status") {
+      // Handle array fields
+      setFormData((prev) => ({ ...prev, [name]: [value] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validatePhone(formData.phone)) {
-      setErrors((prev) => ({
-        ...prev,
-        phone: "Phone number must be 10 digits",
-      }));
+
+    // Validate required fields and phone number
+    const requiredFields = ["name", "phone", "purpose"];
+    const newErrors = {};
+    requiredFields.forEach((field) => {
+      const value = formData[field];
+      if (!value || (typeof value === "string" && !value.trim())) {
+        newErrors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is required`;
+      }
+    });
+
+    // Add phone validation
+    if (!validatePhone(formData.phone.toString())) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    console.log("Data being sent to backend:", {
+      formData,
+      formDataStatus: formData.status,
+      formDataPotential: formData.potential,
+      entireFormData: JSON.stringify(formData, null, 2),
+    });
+
     onSave(formData);
   };
 
@@ -71,87 +118,191 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
 
         <div className="p-6 pt-0 overflow-y-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  required
-                />
+            {/* Personal Information */}
+            <div className="bg-white rounded-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-blue-50 rounded-lg">
+                  <FiUser className="w-5 h-5 text-blue-600" />
+                </div>
+                <h2 className="text-base font-medium text-gray-800">
+                  Personal Information
+                </h2>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2.5 bg-gray-50 border ${
-                    errors.phone ? "border-red-500" : "border-gray-200"
-                  } rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
-                  required
-                  placeholder="Enter 10 digit number"
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Purpose
-                </label>
-                <input
-                  type="text"
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="open">Opened</option>
-                  <option value="inprogress">In Progress</option>
-                  <option value="sitevisitscheduled">
-                    Site Visit Scheduled
-                  </option>
-                  <option value="sitevisited">Site Visited</option>
-                  <option value="closed">Closed</option>
-                  <option value="rejected">Rejected</option>
-                </select>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name Input */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter full name"
+                    className={`w-full px-3 py-2.5 bg-white border ${
+                      dirtyFields.name && errors.name
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg text-sm text-gray-800`}
+                    required
+                  />
+                  {dirtyFields.name && errors.name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  )}
+                </div>
+
+                {/* Phone Input */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone ? formData.phone.toString() : ""}
+                      onChange={handleChange}
+                      placeholder="Enter 10 digit number"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
+                        dirtyFields.phone && errors.phone
+                          ? "border-red-500"
+                          : "border-gray-200"
+                      } rounded-lg text-sm text-gray-800`}
+                      required
+                    />
+                  </div>
+                  {dirtyFields.phone && errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
+                </div>
+
+                {/* Purpose Input - Dropdown */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Purpose
+                  </label>
+                  <select
+                    name="purpose"
+                    value={formData.purpose}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2.5 bg-white border ${
+                      dirtyFields.purpose && errors.purpose
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg text-sm text-gray-800 appearance-none`}
+                    required
+                  >
+                    <option value="" disabled>
+                      Select purpose
+                    </option>
+                    <option value="Investment">Investment</option>
+                    <option value="User">User</option>
+                  </select>
+                  {dirtyFields.purpose && errors.purpose && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.purpose}
+                    </p>
+                  )}
+                </div>
+
+                {/* Time Input */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Time
+                  </label>
+                  <div className="relative">
+                    <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="time"
+                      name="time"
+                      value={formData.time}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Remarks
-              </label>
-              <textarea
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px] resize-y"
-                placeholder="Add your remarks here..."
-              />
+            {/* Lead Classification */}
+            <div className="bg-white rounded-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-green-50 rounded-lg">
+                  <FiTarget className="w-5 h-5 text-green-600" />
+                </div>
+                <h2 className="text-base font-medium text-gray-800">
+                  Lead Classification
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Lead Potential */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Lead Potential
+                  </label>
+                  <select
+                    name="potential"
+                    value={formData.potential[0]}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                  >
+                    <option value="hot">Hot</option>
+                    <option value="warm">Warm</option>
+                    <option value="cold">Cold</option>
+                  </select>
+                </div>
+
+                {/* Lead Status */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Lead Status
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status[0]}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                  >
+                    <option value="open">Open</option>
+                    <option value="inprogress">In Progress</option>
+                    <option value="sitevisitscheduled">Site Visit Scheduled</option>
+                    <option value="sitevisited">Site Visited</option>
+                    <option value="closed">Closed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="missed">Missed</option>
+                    <option value="favourite">Favourite</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Remarks Section */}
+            <div className="bg-white rounded-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-purple-50 rounded-lg">
+                  <FiMessageSquare className="w-5 h-5 text-purple-600" />
+                </div>
+                <h2 className="text-base font-medium text-gray-800">
+                  Additional Information
+                </h2>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Remarks
+                </label>
+                <textarea
+                  name="remarks"
+                  value={formData.remarks}
+                  onChange={handleChange}
+                  placeholder="Add any additional notes about this lead..."
+                  className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[120px] resize-none"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
@@ -179,16 +330,12 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
 EditLeadModal.propTypes = {
   lead: PropTypes.shape({
     name: PropTypes.string.isRequired,
-    phone: PropTypes.string.isRequired,
+    phone: PropTypes.number.isRequired,
     purpose: PropTypes.string.isRequired,
     remarks: PropTypes.string,
-    status: PropTypes.string.isRequired,
-    remarkHistory: PropTypes.arrayOf(
-      PropTypes.shape({
-        remark: PropTypes.string.isRequired,
-        createdAt: PropTypes.string.isRequired,
-      })
-    ),
+    status: PropTypes.arrayOf(PropTypes.string),
+    potential: PropTypes.arrayOf(PropTypes.string),
+    time: PropTypes.string,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,

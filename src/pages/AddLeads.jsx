@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { toast } from "react-toastify";
@@ -6,8 +6,8 @@ import {
   FiUser,
   FiPhone,
   FiTarget,
-  FiCalendar,
   FiMessageSquare,
+  FiClock,
 } from "react-icons/fi";
 
 const AddLeads = () => {
@@ -17,9 +17,9 @@ const AddLeads = () => {
     phone: "",
     purpose: "",
     remarks: "",
-    status: "warm",
-    scheduleTime: "today",
-    customDate: "",
+    potential: ["warm"],
+    status: ["open"],
+    time: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -43,7 +43,8 @@ const AddLeads = () => {
 
     if (name === "phone") {
       const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
-      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
+      const phoneNumber = sanitizedValue ? parseInt(sanitizedValue, 10) : "";
+      setFormData((prev) => ({ ...prev, [name]: phoneNumber }));
 
       if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
         setErrors((prev) => ({
@@ -53,6 +54,9 @@ const AddLeads = () => {
       } else {
         setErrors((prev) => ({ ...prev, phone: "" }));
       }
+    } else if (name === "potential" || name === "status") {
+      // Handle array fields
+      setFormData((prev) => ({ ...prev, [name]: [value] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
       if (errors[name]) {
@@ -68,7 +72,7 @@ const AddLeads = () => {
     const requiredFields = ["name", "phone", "purpose"];
     const newErrors = {};
     requiredFields.forEach((field) => {
-      if (!formData[field].trim()) {
+      if (!formData[field]) {
         newErrors[field] = `${
           field.charAt(0).toUpperCase() + field.slice(1)
         } is required`;
@@ -76,7 +80,7 @@ const AddLeads = () => {
     });
 
     // Add phone validation
-    if (!validatePhone(formData.phone)) {
+    if (!validatePhone(formData.phone.toString())) {
       newErrors.phone = "Phone number must be 10 digits";
     }
 
@@ -86,7 +90,7 @@ const AddLeads = () => {
     }
 
     try {
-      const response = await api.post("/leads", formData);
+      await api.post("/leads", formData);
       toast.success("Lead added successfully!");
       navigate("/leads/new");
     } catch (error) {
@@ -95,7 +99,6 @@ const AddLeads = () => {
           ...prev,
           phone: "Phone number already exists",
         }));
-        // Removed duplicate toast.error here
       } else {
         toast.error(
           error.response?.data?.message ||
@@ -159,7 +162,7 @@ const AddLeads = () => {
                     <input
                       type="tel"
                       name="phone"
-                      value={formData.phone}
+                      value={formData.phone ? formData.phone.toString() : ""}
                       onChange={handleChange}
                       placeholder="Enter 10 digit number"
                       className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
@@ -175,7 +178,7 @@ const AddLeads = () => {
                   )}
                 </div>
 
-                {/* Purpose Input - Changed to Dropdown */}
+                {/* Purpose Input */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
                     Purpose
@@ -197,20 +200,28 @@ const AddLeads = () => {
                     <option value="Investment">Investment</option>
                     <option value="User">User</option>
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg
-                      className="fill-current h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
                   {dirtyFields.purpose && errors.purpose && (
                     <p className="text-red-500 text-xs mt-1">
                       {errors.purpose}
                     </p>
                   )}
+                </div>
+
+                {/* Time Input */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Time
+                  </label>
+                  <div className="relative">
+                    <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="time"
+                      name="time"
+                      value={formData.time}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -226,94 +237,60 @@ const AddLeads = () => {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                {/* Lead Potential Radio Buttons */}
+              <div className="grid grid-cols-1 gap-6">
+                {/* Lead Potential */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
                     Lead Potential
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {["hot", "warm", "cold", "not relevant"].map(
-                      (potential) => (
-                        <label
-                          key={potential}
-                          className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
-                        >
-                          <input
-                            type="radio"
-                            id={`potential-${potential}`}
-                            name="status"
-                            value={potential}
-                            checked={formData.status === potential}
-                            onChange={handleChange}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span className="capitalize text-sm text-gray-700">
-                            {potential}
-                          </span>
-                        </label>
-                      )
-                    )}
+                  <div className="grid grid-cols-3 gap-2">
+                    {["hot", "warm", "cold"].map((potential) => (
+                      <label
+                        key={potential}
+                        className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
+                      >
+                        <input
+                          type="radio"
+                          name="potential"
+                          value={potential}
+                          checked={formData.potential[0] === potential}
+                          onChange={handleChange}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className="capitalize text-sm text-gray-700">
+                          {potential}
+                        </span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
-                {/* Schedule Lead Options */}
+                {/* Status */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
-                    Schedule Lead
+                    Status
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {["today", "tomorrow", "weekend", "Custom"].map(
-                      (scheduleOption) => (
-                        <label
-                          key={scheduleOption}
-                          className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
-                        >
-                          <input
-                            type="radio"
-                            id={`schedule-${scheduleOption}`}
-                            name="scheduleTime"
-                            value={scheduleOption}
-                            checked={formData.scheduleTime === scheduleOption}
-                            onChange={handleChange}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span className="capitalize text-sm text-gray-700">
-                            {scheduleOption}
-                          </span>
-                        </label>
-                      )
-                    )}
-                  </div>
-
-                  {/* Calendar appears below when Custom is selected */}
-                  {formData.scheduleTime === "Custom" && (
-                    <div className="mt-4 bg-white p-5 border border-gray-200 rounded-lg shadow-sm w-full transition-all duration-300 animate-fadeIn">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <FiCalendar className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <label className="text-sm font-medium text-gray-700">
-                          Select Custom Date
-                        </label>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="date"
-                          name="customDate"
-                          value={formData.customDate}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
-                          min={new Date().toISOString().split("T")[0]}
-                          required={formData.scheduleTime === "Custom"}
-                        />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Select a date when you want to follow up with this lead
-                      </p>
-                    </div>
-                  )}
+                  <select
+                    name="status"
+                    value={formData.status[0]}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                  >
+                    {[
+                      "open",
+                      "inprogress",
+                      "sitevisitscheduled",
+                      "sitevisited",
+                      "closed",
+                      "rejected",
+                      "missed",
+                      "favourite",
+                    ].map((status) => (
+                      <option key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
