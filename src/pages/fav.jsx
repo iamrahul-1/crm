@@ -1,8 +1,7 @@
-// React is required for JSX compilation
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import { AiFillHeart } from "react-icons/ai";
 import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
@@ -10,9 +9,8 @@ import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
 import RemarksModal from "../components/RemarksModal";
 
-const NewLeads = () => {
+const FavoriteLeads = () => {
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState({});
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,23 +23,23 @@ const NewLeads = () => {
   const limit = 10;
 
   useEffect(() => {
-    const fetchNewLeads = async () => {
+    const fetchFavoriteLeads = async () => {
       try {
         const response = await api.get(
-          `/leads/status/new?page=${currentPage}&limit=${limit}`
+          `/leads/status/favorite?page=${currentPage}&limit=${limit}`
         );
         setLeads(response.data.leads || []);
         setTotalPages(response.data.totalPages || 1);
         setLoading(false);
       } catch (error) {
-        setError("Failed to fetch new leads");
+        setError("Failed to fetch favorite leads");
         setLoading(false);
-        toast.error("Failed to fetch new leads. Please try again later.");
+        toast.error("Failed to fetch favorite leads. Please try again later.");
         console.error(error);
       }
     };
 
-    fetchNewLeads();
+    fetchFavoriteLeads();
   }, [currentPage]);
 
   const handleEdit = async (updatedData) => {
@@ -64,17 +62,15 @@ const NewLeads = () => {
     setCurrentPage(newPage);
   };
 
-  const toggleFavorite = (id) => {
-    const isFavorite = !favorites[id];
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: isFavorite,
-    }));
-
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`, // Prevent duplicate toasts
-    });
+  const toggleFavorite = async (id) => {
+    try {
+      await api.post(`/leads/${id}/toggle-favorite`);
+      setLeads(leads.filter(lead => lead._id !== id));
+      toast.success("Removed from favorites");
+    } catch (error) {
+      toast.error("Failed to update favorite status");
+      console.error(error);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -142,18 +138,9 @@ const NewLeads = () => {
           <button
             onClick={() => toggleFavorite(row._id)}
             className="p-1.5 rounded-lg transition-colors"
-            title={
-              favorites[row._id] ? "Remove from favorites" : "Add to favorites"
-            }
+            title="Remove from favorites"
           >
-            {favorites[row._id] ? (
-              <AiFillHeart size={20} className="text-red-500" />
-            ) : (
-              <AiOutlineHeart
-                size={20}
-                className="text-gray-400 hover:text-red-500"
-              />
-            )}
+            <AiFillHeart size={20} className="text-red-500" />
           </button>
         </div>
       ),
@@ -176,7 +163,9 @@ const NewLeads = () => {
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <h1 className="text-2xl font-semibold text-gray-900">New Leads</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Favorite Leads
+              </h1>
               <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
                 <FiSearch className="w-5 h-5 text-gray-500" />
               </button>
@@ -189,7 +178,7 @@ const NewLeads = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Search new leads..."
+                  placeholder="Search favorite leads..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -284,4 +273,4 @@ const NewLeads = () => {
   );
 };
 
-export default NewLeads;
+export default FavoriteLeads;

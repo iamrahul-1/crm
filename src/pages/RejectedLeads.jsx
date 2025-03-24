@@ -1,6 +1,4 @@
-// React is required for JSX compilation
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
@@ -10,8 +8,7 @@ import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
 import RemarksModal from "../components/RemarksModal";
 
-const NewLeads = () => {
-  const navigate = useNavigate();
+const RejectedLeads = () => {
   const [favorites, setFavorites] = useState({});
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,23 +22,22 @@ const NewLeads = () => {
   const limit = 10;
 
   useEffect(() => {
-    const fetchNewLeads = async () => {
+    const fetchLeads = async () => {
       try {
         const response = await api.get(
-          `/leads/status/new?page=${currentPage}&limit=${limit}`
+          `/leads/status/rejected?page=${currentPage}&limit=${limit}`
         );
         setLeads(response.data.leads || []);
         setTotalPages(response.data.totalPages || 1);
         setLoading(false);
-      } catch (error) {
-        setError("Failed to fetch new leads");
+      } catch (err) {
+        setError("Failed to fetch rejected leads");
         setLoading(false);
-        toast.error("Failed to fetch new leads. Please try again later.");
-        console.error(error);
+        toast.error("Failed to fetch rejected leads. Please try again later.");
       }
     };
 
-    fetchNewLeads();
+    fetchLeads();
   }, [currentPage]);
 
   const handleEdit = async (updatedData) => {
@@ -54,9 +50,8 @@ const NewLeads = () => {
       );
       setEditingLead(null);
       toast.success("Lead updated successfully");
-    } catch (error) {
+    } catch (err) {
       toast.error("Failed to update lead");
-      console.error(error);
     }
   };
 
@@ -73,7 +68,7 @@ const NewLeads = () => {
 
     toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
       type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`, // Prevent duplicate toasts
+      toastId: `favorite-${id}`,
     });
   };
 
@@ -83,9 +78,8 @@ const NewLeads = () => {
       setLeads(leads.filter((lead) => lead._id !== id));
       toast.success("Lead deleted successfully");
       setDeleteConfirm(null);
-    } catch (error) {
+    } catch (err) {
       toast.error("Failed to delete lead");
-      console.error(error);
     }
   };
 
@@ -176,36 +170,31 @@ const NewLeads = () => {
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <h1 className="text-2xl font-semibold text-gray-900">New Leads</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Rejected Leads
+              </h1>
               <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
                 <FiSearch className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 sm:max-w-md">
-                <FiSearch
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="Search new leads..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                />
-              </div>
-              <button
-                onClick={() => navigate("/leads/add")}
-                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              >
-                Add Lead
-              </button>
+            <div className="relative flex-1 sm:max-w-md">
+              <FiSearch
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search rejected leads..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
             </div>
           </div>
 
           {/* Main Content */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {/* Rest of the content remains the same */}
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -257,7 +246,6 @@ const NewLeads = () => {
           </div>
         </div>
       </div>
-
       {editingLead && (
         <EditLeadModal
           lead={editingLead}
@@ -284,4 +272,4 @@ const NewLeads = () => {
   );
 };
 
-export default NewLeads;
+export default RejectedLeads;

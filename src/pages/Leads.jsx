@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
+import DeleteLeadModal from "../components/DeleteLeadModal";
+import RemarksModal from "../components/RemarksModal";
 
 const Leads = () => {
+  const navigate = useNavigate();
   const [favorites, setFavorites] = useState({});
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +19,8 @@ const Leads = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [editingLead, setEditingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [viewingRemarks, setViewingRemarks] = useState(null);
   const limit = 10;
 
   useEffect(() => {
@@ -55,10 +62,16 @@ const Leads = () => {
   };
 
   const toggleFavorite = (id) => {
+    const isFavorite = !favorites[id];
     setFavorites((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [id]: isFavorite,
     }));
+
+    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
+      type: isFavorite ? "success" : "info",
+      toastId: `favorite-${id}`, // Prevent duplicate toasts
+    });
   };
 
   const handleDelete = async (id) => {
@@ -66,9 +79,14 @@ const Leads = () => {
       await api.delete(`/leads/${id}`);
       setLeads(leads.filter((lead) => lead._id !== id));
       toast.success("Lead deleted successfully");
+      setDeleteConfirm(null);
     } catch (err) {
       toast.error("Failed to delete lead");
     }
+  };
+
+  const handleViewRemarks = (row) => {
+    setViewingRemarks(row);
   };
 
   const columns = [
@@ -85,36 +103,51 @@ const Leads = () => {
       accessor: "purpose",
     },
     {
-      header: "Remark",
+      header: "Remarks",
       accessor: "remarks",
+      render: (row) => (
+        <div className="flex justify-center">
+          <button
+            onClick={() => handleViewRemarks(row)}
+            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            View
+          </button>
+        </div>
+      ),
     },
     {
       header: "Action",
       accessor: "action",
       render: (row) => (
-        <div className="flex space-x-2 items-center">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setEditingLead(row)}
-            className="text-blue-600 hover:text-blue-800"
+            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            title="Edit"
           >
-            Edit
+            <FiEdit2 size={18} />
           </button>
           <button
-            onClick={() => handleDelete(row._id)}
-            className="text-red-600 hover:text-red-800"
+            onClick={() => setDeleteConfirm(row._id)}
+            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+            title="Delete"
           >
-            Delete
+            <FiTrash2 size={18} />
           </button>
           <button
             onClick={() => toggleFavorite(row._id)}
-            className="transition-colors"
+            className="p-1.5 rounded-lg transition-colors"
+            title={
+              favorites[row._id] ? "Remove from favorites" : "Add to favorites"
+            }
           >
             {favorites[row._id] ? (
               <AiFillHeart size={20} className="text-red-500" />
             ) : (
               <AiOutlineHeart
                 size={20}
-                className="text-gray-600 hover:text-red-500"
+                className="text-gray-400 hover:text-red-500"
               />
             )}
           </button>
@@ -133,53 +166,91 @@ const Leads = () => {
   });
 
   return (
-    <div className="md:ml-52 pt-[60px] md:pt-[120px] flex flex-col h-full md:px-8">
-      <h3 className="text-2xl font-bold mb-4 text-gray-800">All Leads</h3>
-      <div className="p-4 w-full mx-auto">
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search leads by name, phone, purpose, or remarks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {loading ? (
-            <div className="text-center py-4">Loading...</div>
-          ) : error ? (
-            <div className="text-center py-4 text-red-500">{error}</div>
-          ) : (
-            <>
-              <Table columns={columns} data={filteredLeads} />
-              <div className="mt-4 flex justify-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded ${
-                    currentPage === 1
-                      ? "bg-gray-200 text-gray-500"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  Previous
-                </button>
-                <span className="px-4 py-2">Page {currentPage}</span>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                  className={`px-4 py-2 rounded ${
-                    currentPage >= totalPages
-                      ? "bg-gray-200 text-gray-500"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  Next
-                </button>
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center justify-between w-full sm:w-auto">
+              <h1 className="text-2xl font-semibold text-gray-900">All Leads</h1>
+              <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
+                <FiSearch className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 sm:max-w-md">
+                <FiSearch
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder="Search leads..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
               </div>
-            </>
-          )}
+              <button
+                onClick={() => navigate("/leads/add")}
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                Add Lead
+              </button>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-64 text-red-500">
+                {error}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table columns={columns} data={filteredLeads} />
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!loading && !error && (
+              <div className="px-6 py-4 border-t border-gray-100">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm text-gray-500">
+                    Showing page {currentPage} of {totalPages}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage >= totalPages}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage >= totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {editingLead && (
@@ -187,6 +258,21 @@ const Leads = () => {
           lead={editingLead}
           onClose={() => setEditingLead(null)}
           onSave={handleEdit}
+        />
+      )}
+
+      {deleteConfirm && (
+        <DeleteLeadModal
+          onClose={() => setDeleteConfirm(null)}
+          onDelete={() => handleDelete(deleteConfirm)}
+        />
+      )}
+
+      {viewingRemarks && (
+        <RemarksModal
+          remarks={viewingRemarks.remarks}
+          leadId={viewingRemarks._id}
+          onClose={() => setViewingRemarks(null)}
         />
       )}
     </div>

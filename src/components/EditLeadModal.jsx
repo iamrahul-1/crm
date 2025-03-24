@@ -1,5 +1,8 @@
 import React, { useState } from "react";
+import { FiX } from "react-icons/fi";
+import PropTypes from "prop-types";
 
+// Remove the formatDate function and any history-related code
 const EditLeadModal = ({ lead, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: lead.name,
@@ -8,60 +11,126 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     remarks: lead.remarks,
     status: lead.status,
   });
+  const [errors, setErrors] = useState({});
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "phone") {
+      // Only allow digits and limit to 10 characters
+      const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
+
+      // Set error if phone is not exactly 10 digits
+      if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
+        setErrors((prev) => ({
+          ...prev,
+          phone: "Phone number must be 10 digits",
+        }));
+      } else {
+        setErrors((prev) => ({ ...prev, phone: "" }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validatePhone(formData.phone)) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: "Phone number must be 10 digits",
+      }));
+      return;
+    }
     onSave(formData);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
-  };
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleString("en-IN", {
+  //     day: "numeric",
+  //     month: "short",
+  //     year: "numeric",
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     hour12: true,
+  //   });
+  // };
+
+  // const getStatusColor = (status) => {
+  //   const colors = {
+  //     new: "bg-blue-50 text-blue-700",
+  //     favourite: "bg-purple-50 text-purple-700",
+  //     missed: "bg-red-50 text-red-700",
+  //     hot: "bg-orange-50 text-orange-700",
+  //     warm: "bg-yellow-50 text-yellow-700",
+  //     cold: "bg-gray-50 text-gray-700",
+  //   };
+  //   return colors[status] || "bg-gray-50 text-gray-700";
+  // };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border-2 border-gray-200 rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold">Edit Lead</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
+        <div className="flex justify-between items-center p-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Edit Lead</h2>
+            <p className="text-sm text-gray-500">
+              Update lead information and status
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
-            ✕
+            <FiX className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium">Name</label>
+
+        <div className="p-6 pt-0 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Name
+                </label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="border rounded-lg p-2 w-full"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   required
                 />
               </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">Phone</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Phone
+                </label>
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="border rounded-lg p-2 w-full"
+                  className={`w-full px-4 py-2.5 bg-gray-50 border ${
+                    errors.phone ? "border-red-500" : "border-gray-200"
+                  } rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
                   required
+                  placeholder="Enter 10 digit number"
                 />
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
               </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
                   Purpose
                 </label>
                 <input
@@ -69,68 +138,52 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   name="purpose"
                   value={formData.purpose}
                   onChange={handleChange}
-                  className="border rounded-lg p-2 w-full"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   required
                 />
               </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">Status</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Status
+                </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="border rounded-lg p-2 w-full"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 >
-                  <option value="new">New</option>
-                  <option value="favourite">Favourite</option>
-                  <option value="missed">Missed</option>
+                  <option value="rejected">Rejected</option>
                   <option value="hot">Hot</option>
                   <option value="warm">Warm</option>
                   <option value="cold">Cold</option>
                 </select>
               </div>
             </div>
-            <div className="mt-4">
-              <label className="block mb-2 text-sm font-medium">Remarks</label>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Remarks
+              </label>
               <textarea
                 name="remarks"
                 value={formData.remarks}
                 onChange={handleChange}
-                className="border rounded-lg p-2 w-full h-24"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[120px] resize-y"
+                placeholder="Add your remarks here..."
               />
             </div>
 
-            {/* Remark History Section */}
-            {lead.remarkHistory && lead.remarkHistory.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3">Remark History</h3>
-                <div className="max-h-60 overflow-y-auto">
-                  {lead.remarkHistory.map((history, index) => (
-                    <div
-                      key={index}
-                      className="border-l-4 border-blue-500 pl-4 mb-4 py-2"
-                    >
-                      <p className="text-gray-700">{history.remark}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formatDate(history.createdAt)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-4 mt-6">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
               >
                 Save Changes
               </button>
@@ -140,6 +193,24 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
       </div>
     </div>
   );
+};
+
+EditLeadModal.propTypes = {
+  lead: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    phone: PropTypes.string.isRequired,
+    purpose: PropTypes.string.isRequired,
+    remarks: PropTypes.string,
+    status: PropTypes.string.isRequired,
+    remarkHistory: PropTypes.arrayOf(
+      PropTypes.shape({
+        remark: PropTypes.string.isRequired,
+        createdAt: PropTypes.string.isRequired,
+      })
+    ),
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
 };
 
 export default EditLeadModal;

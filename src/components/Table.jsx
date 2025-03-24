@@ -9,7 +9,7 @@ const Table = ({ data, columns }) => {
             {columns.map((column, index) => (
               <th
                 key={index}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-center text-sm font-medium text-gray-900 uppercase tracking-wider"
               >
                 {column.header}
               </th>
@@ -22,7 +22,7 @@ const Table = ({ data, columns }) => {
               {columns.map((column, colIndex) => (
                 <td
                   key={colIndex}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                  className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center"
                 >
                   {column.render ? column.render(row) : row[column.accessor]}
                 </td>
