@@ -1,9 +1,9 @@
 const env = {
   development: {
-    apiUrl: 'http://localhost:5000/api',
+    apiUrl: 'https://crm-backend-iamrahul-1.vercel.app/api',
   },
   production: {
-    apiUrl: '/api',
+    apiUrl: 'https://crm-backend-iamrahul-1.vercel.app/api',
   },
 };
 
