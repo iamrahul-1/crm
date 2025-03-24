@@ -53,9 +53,9 @@ const NewLeads = () => {
       );
       setEditingLead(null);
       toast.success("Lead updated successfully");
-    } catch (error) {
-      toast.error("Failed to update lead");
-      console.error(error);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update lead");
+      console.error(err);
     }
   };
 
@@ -66,10 +66,10 @@ const NewLeads = () => {
   const toggleFavorite = async (id, lead) => {
     try {
       const isFavorite = !lead.favourite;
-      await api.put(`/leads/${id}`, { favourite: isFavorite });
+      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
       setLeads(leads.map(l => 
-        l._id === id ? { ...l, favourite: isFavorite } : l
+        l._id === id ? response.data.lead : l
       ));
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
@@ -77,7 +77,7 @@ const NewLeads = () => {
         toastId: `favorite-${id}`,
       });
     } catch (err) {
-      toast.error("Failed to update favorite status");
+      toast.error(err.response?.data?.message || "Failed to update favorite status");
       console.error(err);
     }
   };
@@ -88,9 +88,9 @@ const NewLeads = () => {
       setLeads(leads.filter((lead) => lead._id !== id));
       toast.success("Lead deleted successfully");
       setDeleteConfirm(null);
-    } catch (error) {
-      toast.error("Failed to delete lead");
-      console.error(error);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete lead");
+      console.error(err);
     }
   };
 

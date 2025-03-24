@@ -32,9 +32,9 @@ const Leads = () => {
         setTotalPages(response.data.totalPages || 1);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch leads");
+        setError(err.response?.data?.message || "Failed to fetch leads");
         setLoading(false);
-        toast.error("Failed to fetch leads. Please try again later.");
+        toast.error(err.response?.data?.message || "Failed to fetch leads. Please try again later.");
       }
     };
 
@@ -52,7 +52,7 @@ const Leads = () => {
       setEditingLead(null);
       toast.success("Lead updated successfully");
     } catch (err) {
-      toast.error("Failed to update lead");
+      toast.error(err.response?.data?.message || "Failed to update lead");
     }
   };
 
@@ -63,10 +63,10 @@ const Leads = () => {
   const toggleFavorite = async (id, lead) => {
     try {
       const isFavorite = !lead.favourite;
-      await api.put(`/leads/${id}`, { favourite: isFavorite });
+      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
       setLeads(leads.map(l => 
-        l._id === id ? { ...l, favourite: isFavorite } : l
+        l._id === id ? response.data.lead : l
       ));
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
@@ -74,7 +74,7 @@ const Leads = () => {
         toastId: `favorite-${id}`,
       });
     } catch (err) {
-      toast.error("Failed to update favorite status");
+      toast.error(err.response?.data?.message || "Failed to update favorite status");
       console.error(err);
     }
   };
@@ -86,7 +86,7 @@ const Leads = () => {
       toast.success("Lead deleted successfully");
       setDeleteConfirm(null);
     } catch (err) {
-      toast.error("Failed to delete lead");
+      toast.error(err.response?.data?.message || "Failed to delete lead");
     }
   };
 
