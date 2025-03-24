@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { FiX } from "react-icons/fi";
 import PropTypes from "prop-types";
 
-// Remove the formatDate function and any history-related code
 const EditLeadModal = ({ lead, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: lead.name,
@@ -51,30 +50,6 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     }
     onSave(formData);
   };
-
-  // const formatDate = (dateString) => {
-  //   const date = new Date(dateString);
-  //   return date.toLocaleString("en-IN", {
-  //     day: "numeric",
-  //     month: "short",
-  //     year: "numeric",
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //     hour12: true,
-  //   });
-  // };
-
-  // const getStatusColor = (status) => {
-  //   const colors = {
-  //     new: "bg-blue-50 text-blue-700",
-  //     favourite: "bg-purple-50 text-purple-700",
-  //     missed: "bg-red-50 text-red-700",
-  //     hot: "bg-orange-50 text-orange-700",
-  //     warm: "bg-yellow-50 text-yellow-700",
-  //     cold: "bg-gray-50 text-gray-700",
-  //   };
-  //   return colors[status] || "bg-gray-50 text-gray-700";
-  // };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -147,15 +122,21 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   Status
                 </label>
                 <select
+                  id="status"
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
+                  <option value="open">Opened</option>
+                  <option value="inprogress">In Progress</option>
+                  <option value="sitevisitscheduled">
+                    Site Visit Scheduled
+                  </option>
+                  <option value="sitevisited">Site Visited</option>
+                  <option value="closed">Closed</option>
                   <option value="rejected">Rejected</option>
-                  <option value="hot">Hot</option>
-                  <option value="warm">Warm</option>
-                  <option value="cold">Cold</option>
                 </select>
               </div>
             </div>
