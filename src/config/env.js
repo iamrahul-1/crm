@@ -1,9 +1,9 @@
 const env = {
   development: {
-    apiUrl: 'https://crm-backend-iamrahul-1.vercel.app/api',
+    apiUrl: 'https://brookstone-backend.vercel.app/api',
   },
   production: {
-    apiUrl: 'https://crm-backend-iamrahul-1.vercel.app/api',
+    apiUrl: 'https://brookstone-backend.vercel.app/api',
   },
 };
 
