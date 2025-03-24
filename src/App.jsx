@@ -4,7 +4,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; // Add this import
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
-import PieChart from "./components/Dashboard";
+import PieChart from "./components/dashboard";
 import Profile from "./pages/Profile";
 import Setting from "./pages/Setting";
 import AddLeads from "./pages/AddLeads";
