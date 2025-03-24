@@ -138,7 +138,7 @@ function Navigation({ isOpen, toggleMenu }) {
 
   const handleNavigation = (path) => {
     navigate(path);
-    // Don't close dropdowns after navigation
+    toggleMenu(); // Close navbar on mobile after navigation
   };
 
   return (
@@ -280,9 +280,10 @@ function Navigation({ isOpen, toggleMenu }) {
                                       ? "bg-blue-200 text-blue-700"
                                       : ""
                                   }`}
-                                  onClick={() =>
-                                    handleNavigation(nestedLink.path)
-                                  }
+                                  onClick={() => {
+                                    handleNavigation(nestedLink.path);
+                                    toggleMenu(); // Close navbar on mobile
+                                  }}
                                 >
                                   {nestedLink.label}
                                 </Link>
@@ -299,7 +300,10 @@ function Navigation({ isOpen, toggleMenu }) {
                             ? "bg-blue-200 text-blue-700"
                             : ""
                         }`}
-                        onClick={() => handleNavigation(subLink.path)}
+                        onClick={() => {
+                          handleNavigation(subLink.path);
+                          toggleMenu(); // Close navbar on mobile
+                        }}
                       >
                         {subLink.label}
                       </Link>

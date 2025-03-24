@@ -64,12 +64,12 @@ const FavoriteLeads = () => {
 
   const toggleFavorite = async (id) => {
     try {
-      await api.post(`/leads/${id}/toggle-favorite`);
+      await api.put(`/leads/${id}`, { favourite: false });
       setLeads(leads.filter(lead => lead._id !== id));
       toast.success("Removed from favorites");
-    } catch (error) {
-      toast.error("Failed to update favorite status");
-      console.error(error);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update favorite status");
+      console.error(err);
     }
   };
 

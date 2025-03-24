@@ -269,12 +269,13 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   >
                     <option value="open">Open</option>
                     <option value="inprogress">In Progress</option>
-                    <option value="sitevisitscheduled">Site Visit Scheduled</option>
+                    <option value="sitevisitscheduled">
+                      Site Visit Scheduled
+                    </option>
                     <option value="sitevisited">Site Visited</option>
                     <option value="closed">Closed</option>
                     <option value="rejected">Rejected</option>
                     <option value="missed">Missed</option>
-                    <option value="favourite">Favourite</option>
                   </select>
                 </div>
               </div>
