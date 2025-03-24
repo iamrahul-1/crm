@@ -1,28 +1,12 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
-      "src": "/clients",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/agents",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/profile",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/settings",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
