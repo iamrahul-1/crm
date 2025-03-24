@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FaTimes,
   FaTachometerAlt,
@@ -23,9 +23,9 @@ const leadDropdownLinks = [
     path: "/leads/potential",
     label: "Lead Potential",
     subLinks: [
-      { id: 'pot1', path: "/leads/potential/hot", label: "Hot" },
-      { id: 'pot2', path: "/leads/potential/warm", label: "Warm" },
-      { id: 'pot3', path: "/leads/potential/cold", label: "Cold" },
+      { id: "pot1", path: "/leads/potential/hot", label: "Hot" },
+      { id: "pot2", path: "/leads/potential/warm", label: "Warm" },
+      { id: "pot3", path: "/leads/potential/cold", label: "Cold" },
     ],
   },
   {
@@ -33,11 +33,15 @@ const leadDropdownLinks = [
     path: "/leads/status",
     label: "Lead Status",
     subLinks: [
-      { id: 'stat1', path: "/leads/status/opened", label: "Opened" },
-      { id: 'stat2', path: "/leads/status/in-progress", label: "In Progress" },
-      { id: 'stat3', path: "/leads/status/visit-scheduled", label: "Site Visit Scheduled" },
-      { id: 'stat4', path: "/leads/status/visited", label: "Site Visited" },
-      { id: 'stat5', path: "/leads/status/closed", label: "Closed" },
+      { id: "stat1", path: "/leads/status/opened", label: "Opened" },
+      { id: "stat2", path: "/leads/status/in-progress", label: "In Progress" },
+      {
+        id: "stat3",
+        path: "/leads/status/visit-scheduled",
+        label: "Site Visit Scheduled",
+      },
+      { id: "stat4", path: "/leads/status/visited", label: "Site Visited" },
+      { id: "stat5", path: "/leads/status/closed", label: "Closed" },
     ],
   },
   {
@@ -45,9 +49,9 @@ const leadDropdownLinks = [
     path: "/leads/schedule",
     label: "Schedule Visits",
     subLinks: [
-      { id: 'sch1', path: "/leads/schedule/today", label: "Today" },
-      { id: 'sch2', path: "/leads/schedule/tomorrow", label: "Tomorrow" },
-      { id: 'sch3', path: "/leads/schedule/weekend", label: "Weekend" },
+      { id: "sch1", path: "/leads/schedule/today", label: "Today" },
+      { id: "sch2", path: "/leads/schedule/tomorrow", label: "Tomorrow" },
+      { id: "sch3", path: "/leads/schedule/weekend", label: "Weekend" },
     ],
   },
   { id: 8, path: "/leads/rejected", label: "Rejected Leads" },
@@ -55,11 +59,20 @@ const leadDropdownLinks = [
 
 function Navigation({ isOpen, toggleMenu }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLeadsOpen, setLeadsOpen] = useState(false);
   const [isPotentialOpen, setPotentialOpen] = useState(false);
   const [isStatusOpen, setStatusOpen] = useState(false);
   const [isScheduleOpen, setScheduleOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const isActivePath = (path) => {
+    return location.pathname === path;
+  };
+
+  const isActiveNestedPath = (path) => {
+    return location.pathname.startsWith(path);
+  };
 
   const navLinks = [
     { id: 3, path: "/cp", label: "Channel Partner", icon: <FaUserFriends /> },
@@ -125,11 +138,7 @@ function Navigation({ isOpen, toggleMenu }) {
 
   const handleNavigation = (path) => {
     navigate(path);
-    // Close all dropdowns after navigation
-    setLeadsOpen(false);
-    setPotentialOpen(false);
-    setStatusOpen(false);
-    setScheduleOpen(false);
+    // Don't close dropdowns after navigation
   };
 
   return (
@@ -158,10 +167,18 @@ function Navigation({ isOpen, toggleMenu }) {
           <li>
             <Link
               to="/"
-              className="flex items-center gap-2 sm:gap-3 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all group text-sm sm:text-base"
+              className={`flex items-center gap-2 sm:gap-3 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all group text-sm sm:text-base ${
+                isActivePath("/") ? "bg-blue-200 text-blue-700" : ""
+              }`}
               onClick={toggleMenu}
             >
-              <span className="text-base sm:text-lg text-gray-400 group-hover:text-gray-600">
+              <span
+                className={`text-base sm:text-lg ${
+                  isActivePath("/")
+                    ? "text-blue-500"
+                    : "text-gray-400 group-hover:text-gray-600"
+                }`}
+              >
                 <FaTachometerAlt />
               </span>
               <span className="font-medium">Dashboard</span>
@@ -177,7 +194,13 @@ function Navigation({ isOpen, toggleMenu }) {
               onClick={toggleLeadsDropdown}
             >
               <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-base sm:text-lg text-gray-400 group-hover:text-gray-600">
+                <span
+                  className={`text-base sm:text-lg ${
+                    isActiveNestedPath("/leads")
+                      ? "text-blue-500"
+                      : "text-gray-400 group-hover:text-gray-600"
+                  }`}
+                >
                   <HiOutlineClipboardList />
                 </span>
                 <span className="font-medium">Leads</span>
@@ -199,12 +222,17 @@ function Navigation({ isOpen, toggleMenu }) {
                       <>
                         <button
                           className={`flex items-center justify-between w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all text-sm ${
-                            subLink.path === "/leads/potential" && isPotentialOpen
+                            (subLink.path === "/leads/potential" &&
+                              isPotentialOpen) ||
+                            (subLink.path === "/leads/status" &&
+                              isStatusOpen) ||
+                            (subLink.path === "/leads/schedule" &&
+                              isScheduleOpen)
                               ? "bg-gray-50 text-gray-900"
-                              : subLink.path === "/leads/status" && isStatusOpen
-                              ? "bg-gray-50 text-gray-900"
-                              : subLink.path === "/leads/schedule" && isScheduleOpen
-                              ? "bg-gray-50 text-gray-900"
+                              : ""
+                          } ${
+                            isActiveNestedPath(subLink.path)
+                              ? "bg-blue-200 text-blue-700"
                               : ""
                           }`}
                           onClick={() =>
@@ -218,26 +246,43 @@ function Navigation({ isOpen, toggleMenu }) {
                           }
                         >
                           <span className="font-medium">{subLink.label}</span>
-                          <span className="text-gray-400">
-                            {subLink.path === "/leads/potential" && isPotentialOpen
-                              ? <FaChevronUp size={10} />
-                              : subLink.path === "/leads/status" && isStatusOpen
-                              ? <FaChevronUp size={10} />
-                              : subLink.path === "/leads/schedule" && isScheduleOpen
-                              ? <FaChevronUp size={10} />
-                              : <FaChevronDown size={10} />}
+                          <span
+                            className={`${
+                              isActiveNestedPath(subLink.path)
+                                ? "text-blue-500"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {(subLink.path === "/leads/potential" &&
+                              isPotentialOpen) ||
+                            (subLink.path === "/leads/status" &&
+                              isStatusOpen) ||
+                            (subLink.path === "/leads/schedule" &&
+                              isScheduleOpen) ? (
+                              <FaChevronUp size={10} />
+                            ) : (
+                              <FaChevronDown size={10} />
+                            )}
                           </span>
                         </button>
-                        {(subLink.path === "/leads/potential" && isPotentialOpen) ||
+                        {(subLink.path === "/leads/potential" &&
+                          isPotentialOpen) ||
                         (subLink.path === "/leads/status" && isStatusOpen) ||
-                        (subLink.path === "/leads/schedule" && isScheduleOpen) ? (
+                        (subLink.path === "/leads/schedule" &&
+                          isScheduleOpen) ? (
                           <ul className="mt-0.5 sm:mt-1 ml-3 sm:ml-4 space-y-0.5 sm:space-y-1">
                             {subLink.subLinks.map((nestedLink) => (
                               <li key={nestedLink.id}>
                                 <Link
                                   to={nestedLink.path}
-                                  className="block py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all text-sm"
-                                  onClick={() => handleNavigation(nestedLink.path)}
+                                  className={`block py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all text-sm ${
+                                    isActivePath(nestedLink.path)
+                                      ? "bg-blue-200 text-blue-700"
+                                      : ""
+                                  }`}
+                                  onClick={() =>
+                                    handleNavigation(nestedLink.path)
+                                  }
                                 >
                                   {nestedLink.label}
                                 </Link>
@@ -249,7 +294,11 @@ function Navigation({ isOpen, toggleMenu }) {
                     ) : (
                       <Link
                         to={subLink.path}
-                        className="block py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all text-sm"
+                        className={`block py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all text-sm ${
+                          isActivePath(subLink.path)
+                            ? "bg-blue-200 text-blue-700"
+                            : ""
+                        }`}
                         onClick={() => handleNavigation(subLink.path)}
                       >
                         {subLink.label}
@@ -280,10 +329,18 @@ function Navigation({ isOpen, toggleMenu }) {
               ) : (
                 <Link
                   to={link.path}
-                  className="flex items-center gap-2 sm:gap-3 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all group text-sm sm:text-base"
+                  className={`flex items-center gap-2 sm:gap-3 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all group text-sm sm:text-base ${
+                    isActivePath(link.path) ? "bg-blue-200 text-blue-700" : ""
+                  }`}
                   onClick={toggleMenu}
                 >
-                  <span className="text-base sm:text-lg text-gray-400 group-hover:text-gray-600">
+                  <span
+                    className={`text-base sm:text-lg ${
+                      isActivePath(link.path)
+                        ? "text-blue-500"
+                        : "text-gray-400 group-hover:text-gray-600"
+                    }`}
+                  >
                     {link.icon}
                   </span>
                   <span className="font-medium">{link.label}</span>

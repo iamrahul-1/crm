@@ -3,9 +3,8 @@ import Table from "../components/Table";
 import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
-import EditLeadModal from "../components/EditLeadModal";
+import EditCpModal from "../components/EditCpModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
-import RemarksModal from "../components/RemarksModal";
 
 const Agents = () => {
   const [agents, setAgents] = useState([]);
@@ -16,7 +15,6 @@ const Agents = () => {
   const [editingAgent, setEditingAgent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [viewingRemarks, setViewingRemarks] = useState(null);
   const limit = 10;
 
   useEffect(() => {
@@ -25,7 +23,7 @@ const Agents = () => {
         const response = await api.get(
           `/cp?page=${currentPage}&limit=${limit}`
         );
-        setAgents(response.data.leads || []);
+        setAgents(response.data.cps || []);
         setTotalPages(response.data.totalPages || 1);
         setLoading(false);
       } catch (error) {
@@ -43,10 +41,10 @@ const Agents = () => {
 
   const handleEdit = async (updatedData) => {
     try {
-      const response = await api.put(`/leads/${editingAgent._id}`, updatedData);
+      const response = await api.put(`/cp/${editingAgent._id}`, updatedData);
       setAgents(
         agents.map((agent) =>
-          agent._id === editingAgent._id ? response.data.lead : agent
+          agent._id === editingAgent._id ? response.data.cp : agent
         )
       );
       setEditingAgent(null);
@@ -63,7 +61,7 @@ const Agents = () => {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/leads/${id}`);
+      await api.delete(`/cp/${id}`);
       setAgents(agents.filter((agent) => agent._id !== id));
       toast.success("Channel partner deleted successfully");
       setDeleteConfirm(null);
@@ -73,35 +71,31 @@ const Agents = () => {
     }
   };
 
-  const handleViewRemarks = (row) => {
-    setViewingRemarks(row);
-  };
-
   const columns = [
     {
-      header: "Company",
-      accessor: "company",
+      header: "Name",
+      accessor: "name",
     },
     {
-      header: "Total Leads",
-      accessor: "totalLeads",
+      header: "Phone",
+      accessor: "phone",
     },
     {
-      header: "Active Leads",
-      accessor: "activeLeads",
-    },
-    {
-      header: "Remarks",
-      accessor: "remarks",
+      header: "Role",
+      accessor: "role",
       render: (row) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => handleViewRemarks(row)}
-            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            View
-          </button>
-        </div>
+        <span className="capitalize">
+          {row.role} {row.companyRole ? `(${row.companyRole})` : ''}
+        </span>
+      ),
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      render: (row) => (
+        <span>
+          {new Date(row.date).toLocaleDateString()}
+        </span>
       ),
     },
     {
@@ -130,10 +124,10 @@ const Agents = () => {
 
   const filteredAgents = agents.filter((agent) => {
     return (
-      agent.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(agent.totalLeads).includes(searchQuery) ||
-      String(agent.activeLeads).includes(searchQuery) ||
-      agent.remarks.toLowerCase().includes(searchQuery.toLowerCase())
+      agent.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.phone?.includes(searchQuery) ||
+      agent.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.companyRole?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
@@ -221,8 +215,8 @@ const Agents = () => {
       </div>
 
       {editingAgent && (
-        <EditLeadModal
-          lead={editingAgent}
+        <EditCpModal
+          cp={editingAgent}
           onClose={() => setEditingAgent(null)}
           onSave={handleEdit}
         />
@@ -232,14 +226,6 @@ const Agents = () => {
         <DeleteLeadModal
           onClose={() => setDeleteConfirm(null)}
           onDelete={() => handleDelete(deleteConfirm)}
-        />
-      )}
-
-      {viewingRemarks && (
-        <RemarksModal
-          remarks={viewingRemarks.remarks}
-          leadId={viewingRemarks._id}
-          onClose={() => setViewingRemarks(null)}
         />
       )}
     </div>
