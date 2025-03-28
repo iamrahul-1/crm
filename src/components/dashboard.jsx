@@ -17,16 +17,16 @@ const Dashboard = () => {
 
   // First chart data
   const getData1 = () => [
-    { asset: "Hot", amount: 4 },
-    { asset: "Warm", amount: 46 },
-    { asset: "Cold", amount: 38 },
+    { asset: "Rejected", amount: 4 },
+    { asset: "Favourite", amount: 46 },
+    { asset: "Site Visited", amount: 38 },
   ];
 
   // Second chart data
   const getData2 = () => [
-    { asset: "Today", amount: 50 },
-    { asset: "Missed", amount: 50 },
-    { asset: "Favourite", amount: 50 },
+    { asset: "Today", amount: 98 },
+    { asset: "Missed", amount: 55 },
+    { asset: "Weekend", amount: 112 },
   ];
 
   useEffect(() => {
@@ -238,7 +238,7 @@ const Dashboard = () => {
                       <FiBarChart2 className="w-5 h-5 text-purple-600" />
                     </div>
                     <h2 className="text-base font-medium text-gray-800">
-                      Lead Distribution
+                      Lead Management
                     </h2>
                   </div>
                   <div className="h-[280px] relative">

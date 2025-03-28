@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
-import RemarksModal from "../components/RemarksModal";
+import ViewLeadModal from "../components/ViewLeadModal";
 
 const MissedLeads = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const MissedLeads = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [viewingRemarks, setViewingRemarks] = useState(null);
+  const [viewingLead, setViewingLead] = useState(null);
   const limit = 10;
 
   useEffect(() => {
@@ -73,8 +73,8 @@ const MissedLeads = () => {
     }
   };
 
-  const handleViewRemarks = (row) => {
-    setViewingRemarks(row);
+  const handleViewLead = (row) => {
+    setViewingLead(row);
   };
 
   const columns = [
@@ -96,7 +96,7 @@ const MissedLeads = () => {
       render: (row) => (
         <div className="flex justify-center">
           <button
-            onClick={() => handleViewRemarks(row)}
+            onClick={() => handleViewLead(row)}
             className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >
             View
@@ -243,11 +243,10 @@ const MissedLeads = () => {
         />
       )}
 
-      {viewingRemarks && (
-        <RemarksModal
-          remarks={viewingRemarks.remarks}
-          leadId={viewingRemarks._id}
-          onClose={() => setViewingRemarks(null)}
+      {viewingLead && (
+        <ViewLeadModal
+          lead={viewingLead}
+          onClose={() => setViewingLead(null)}
         />
       )}
     </div>

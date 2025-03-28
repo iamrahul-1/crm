@@ -17,7 +17,7 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     remarks: lead.remarks,
     potential: lead.potential || ["warm"],
     status: lead.status || ["open"],
-    time: lead.time || "",
+    date: lead.date || "",
   });
   const [errors, setErrors] = useState({});
   const [dirtyFields, setDirtyFields] = useState({});
@@ -208,19 +208,21 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   )}
                 </div>
 
-                {/* Time Input */}
+                {/* Date Input (previously Time) */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
-                    Time
+                    Date
                   </label>
                   <div className="relative">
                     <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
-                      type="time"
-                      name="time"
-                      value={formData.time}
+                      type="date"
+                      name="date"
+                      value={formData.date || ""}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                      pattern="\d{2}/\d{2}/\d{4}"
+                      placeholder="DD/MM/YYYY"
                     />
                   </div>
                 </div>
@@ -336,7 +338,7 @@ EditLeadModal.propTypes = {
     remarks: PropTypes.string,
     status: PropTypes.arrayOf(PropTypes.string),
     potential: PropTypes.arrayOf(PropTypes.string),
-    time: PropTypes.string,
+    date: PropTypes.string,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,

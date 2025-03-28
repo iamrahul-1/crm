@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
-import RemarksModal from "../components/RemarksModal";
+import ViewLeadModal from "../components/ViewLeadModal";
 
 const FavoriteLeads = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const FavoriteLeads = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [viewingRemarks, setViewingRemarks] = useState(null);
+  const [viewingLead, setViewingLead] = useState(null);
   const limit = 10;
 
   useEffect(() => {
@@ -65,10 +65,12 @@ const FavoriteLeads = () => {
   const toggleFavorite = async (id) => {
     try {
       await api.put(`/leads/${id}`, { favourite: false });
-      setLeads(leads.filter(lead => lead._id !== id));
+      setLeads(leads.filter((lead) => lead._id !== id));
       toast.success("Removed from favorites");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update favorite status");
+      toast.error(
+        err.response?.data?.message || "Failed to update favorite status"
+      );
       console.error(err);
     }
   };
@@ -85,8 +87,9 @@ const FavoriteLeads = () => {
     }
   };
 
-  const handleViewRemarks = (row) => {
-    setViewingRemarks(row);
+  // Add the handleViewLead function
+  const handleViewLead = (row) => {
+    setViewingLead(row);
   };
 
   const columns = [
@@ -108,7 +111,7 @@ const FavoriteLeads = () => {
       render: (row) => (
         <div className="flex justify-center">
           <button
-            onClick={() => handleViewRemarks(row)}
+            onClick={() => handleViewLead(row)}
             className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >
             View
@@ -262,11 +265,10 @@ const FavoriteLeads = () => {
         />
       )}
 
-      {viewingRemarks && (
-        <RemarksModal
-          remarks={viewingRemarks.remarks}
-          leadId={viewingRemarks._id}
-          onClose={() => setViewingRemarks(null)}
+      {viewingLead && (
+        <ViewLeadModal
+          lead={viewingLead}
+          onClose={() => setViewingLead(null)}
         />
       )}
     </div>

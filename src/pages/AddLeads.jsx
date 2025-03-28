@@ -7,7 +7,7 @@ import {
   FiPhone,
   FiTarget,
   FiMessageSquare,
-  FiClock,
+  FiCalendar,
 } from "react-icons/fi";
 
 const AddLeads = () => {
@@ -19,15 +19,29 @@ const AddLeads = () => {
     remarks: "",
     potential: ["warm"],
     status: ["open"],
-    time: "",
+    requirement: "",
   });
 
   const [errors, setErrors] = useState({});
   const [dirtyFields, setDirtyFields] = useState({});
+  const [dateError, setDateError] = useState("");
 
   const validatePhone = (phone) => {
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
+  };
+
+  const validateDate = (date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+
+    if (selectedDate < today) {
+      setDateError("Please select today or a future date");
+      return false;
+    }
+    setDateError("");
+    return true;
   };
 
   const handleChange = (e) => {
@@ -53,6 +67,13 @@ const AddLeads = () => {
         }));
       } else {
         setErrors((prev) => ({ ...prev, phone: "" }));
+      }
+    } else if (name === "date") {
+      if (validateDate(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
       }
     } else if (name === "potential" || name === "status") {
       // Handle array fields
@@ -106,6 +127,15 @@ const AddLeads = () => {
         );
       }
     }
+  };
+
+  const statusDisplayMap = {
+    open: "Open",
+    inprogress: "In Progress",
+    sitevisitscheduled: "Site Visit Scheduled",
+    sitevisited: "Site Visited",
+    closed: "Closed",
+    rejected: "Rejected",
   };
 
   return (
@@ -207,21 +237,43 @@ const AddLeads = () => {
                   )}
                 </div>
 
-                {/* Time Input */}
+                {/* Date Input */}
+                {/* Requirement Input (replacing Date) */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
-                    Time
+                    Requirement
                   </label>
                   <div className="relative">
-                    <FiClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="time"
-                      name="time"
-                      value={formData.time}
+                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <select
+                      name="requirement"
+                      value={formData.requirement || ""}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
-                    />
+                    >
+                      <option value="" disabled>
+                        Select requirement
+                      </option>
+                      <option value="3BHK">3 BHK</option>
+                      <option value="4BHK">4 BHK</option>
+                    </select>
                   </div>
+                </div>
+
+                {/* Source Input - New Field */}
+                {/* Source Input - Changed from dropdown to text field */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Source
+                  </label>
+                  <input
+                    type="text"
+                    name="source"
+                    value={formData.source || ""}
+                    onChange={handleChange}
+                    placeholder="Enter source"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                  />
                 </div>
               </div>
             </div>
@@ -276,20 +328,13 @@ const AddLeads = () => {
                     onChange={handleChange}
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                   >
-                    {[
-                      "open",
-                      "inprogress",
-                      "sitevisitscheduled",
-                      "sitevisited",
-                      "closed",
-                      "rejected",
-                      "missed",
-                      "favourite",
-                    ].map((status) => (
-                      <option key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </option>
-                    ))}
+                    {Object.entries(statusDisplayMap).map(
+                      ([value, display]) => (
+                        <option key={value} value={value}>
+                          {display}
+                        </option>
+                      )
+                    )}
                   </select>
                 </div>
               </div>

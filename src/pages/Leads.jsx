@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
-import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import { AiFillHeart } from "react-icons/ai";
+import { FiEdit2, FiTrash2, FiSearch, FiEye } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
-import RemarksModal from "../components/RemarksModal";
-
+import ViewLeadModal from "../components/ViewLeadModal"; // updated import path
 const Leads = () => {
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
@@ -17,9 +16,9 @@ const Leads = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingLead, setEditingLead] = useState(null);
+  const [viewingLead, setViewingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [viewingRemarks, setViewingRemarks] = useState(null);
   const limit = 10;
 
   useEffect(() => {
@@ -90,8 +89,8 @@ const Leads = () => {
     }
   };
 
-  const handleViewRemarks = (row) => {
-    setViewingRemarks(row);
+  const handleViewLead = (row) => {
+    setViewingLead(row);
   };
 
   const columns = [
@@ -113,7 +112,7 @@ const Leads = () => {
       render: (row) => (
         <div className="flex justify-center">
           <button
-            onClick={() => handleViewRemarks(row)}
+            onClick={() => handleViewLead(row)}
             className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >
             View
@@ -126,6 +125,13 @@ const Leads = () => {
       accessor: "action",
       render: (row) => (
         <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => handleViewLead(row)}
+            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            title="View Details"
+          >
+            <FiEye size={18} />
+          </button>
           <button
             onClick={() => setEditingLead(row)}
             className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
@@ -143,18 +149,12 @@ const Leads = () => {
           <button
             onClick={() => toggleFavorite(row._id, row)}
             className="p-1.5 rounded-lg transition-colors"
-            title={
-              row.favourite ? "Remove from favorites" : "Add to favorites"
-            }
+            title={row.favourite ? "Remove from favorites" : "Add to favorites"}
           >
-            {row.favourite ? (
-              <AiFillHeart size={20} className="text-red-500" />
-            ) : (
-              <AiOutlineHeart
-                size={20}
-                className="text-gray-400 hover:text-red-500"
-              />
-            )}
+            <AiFillHeart
+              size={20}
+              className={row.favourite ? "text-red-500" : "text-gray-300"}
+            />
           </button>
         </div>
       ),
@@ -272,11 +272,10 @@ const Leads = () => {
         />
       )}
 
-      {viewingRemarks && (
-        <RemarksModal
-          remarks={viewingRemarks.remarks}
-          leadId={viewingRemarks._id}
-          onClose={() => setViewingRemarks(null)}
+      {viewingLead && (
+        <ViewLeadModal
+          lead={viewingLead}
+          onClose={() => setViewingLead(null)}
         />
       )}
     </div>

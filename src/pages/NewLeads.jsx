@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
-import RemarksModal from "../components/RemarksModal";
+import ViewLeadModal from "../components/ViewLeadModal";
 
 const NewLeads = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const NewLeads = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [viewingRemarks, setViewingRemarks] = useState(null);
+  const [viewingLead, setViewingLead] = useState(null);
   const limit = 10;
 
   useEffect(() => {
@@ -68,16 +68,16 @@ const NewLeads = () => {
       const isFavorite = !lead.favourite;
       const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-      setLeads(leads.map(l => 
-        l._id === id ? response.data.lead : l
-      ));
+      setLeads(leads.map((l) => (l._id === id ? response.data.lead : l)));
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
         type: isFavorite ? "success" : "info",
         toastId: `favorite-${id}`,
       });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update favorite status");
+      toast.error(
+        err.response?.data?.message || "Failed to update favorite status"
+      );
       console.error(err);
     }
   };
@@ -94,8 +94,8 @@ const NewLeads = () => {
     }
   };
 
-  const handleViewRemarks = (row) => {
-    setViewingRemarks(row);
+  const handleViewLead = (row) => {
+    setViewingLead(row);
   };
 
   const columns = [
@@ -117,7 +117,7 @@ const NewLeads = () => {
       render: (row) => (
         <div className="flex justify-center">
           <button
-            onClick={() => handleViewRemarks(row)}
+            onClick={() => handleViewLead(row)}
             className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
           >
             View
@@ -147,9 +147,7 @@ const NewLeads = () => {
           <button
             onClick={() => toggleFavorite(row._id, row)}
             className="p-1.5 rounded-lg transition-colors"
-            title={
-              row.favourite ? "Remove from favorites" : "Add to favorites"
-            }
+            title={row.favourite ? "Remove from favorites" : "Add to favorites"}
           >
             {row.favourite ? (
               <AiFillHeart size={20} className="text-red-500" />
@@ -280,11 +278,10 @@ const NewLeads = () => {
         />
       )}
 
-      {viewingRemarks && (
-        <RemarksModal
-          remarks={viewingRemarks.remarks}
-          leadId={viewingRemarks._id}
-          onClose={() => setViewingRemarks(null)}
+      {viewingLead && (
+        <ViewLeadModal
+          lead={viewingLead}
+          onClose={() => setViewingLead(null)}
         />
       )}
     </div>
