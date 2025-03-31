@@ -37,11 +37,11 @@ const NewLeads = () => {
   const fetchNewLeads = useCallback(async () => {
     try {
       const response = await api.get(
-        `/leads/status/open?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/status/new?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -67,11 +67,20 @@ const NewLeads = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      setLeads(
-        leads.map((lead) =>
-          lead._id === editingLead._id ? response.data.lead : lead
-        )
-      );
+
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((lead) => {
+        if (lead._id === editingLead._id) {
+          return {
+            ...lead,
+            ...response.data.lead,
+            createdBy: lead.createdBy, // Preserve the createdBy field
+          };
+        }
+        return lead;
+      });
+
+      setLeads(updatedLeads);
       setEditingLead(null);
       toast.success("Lead updated successfully");
     } catch (err) {
@@ -89,7 +98,19 @@ const NewLeads = () => {
       const isFavorite = !lead.favourite;
       const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-      setLeads(leads.map((l) => (l._id === id ? response.data.lead : l)));
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((l) => {
+        if (l._id === id) {
+          return {
+            ...l,
+            ...response.data.lead,
+            createdBy: l.createdBy, // Preserve the createdBy field
+          };
+        }
+        return l;
+      });
+
+      setLeads(updatedLeads);
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
         type: isFavorite ? "success" : "info",

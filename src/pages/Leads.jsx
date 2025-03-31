@@ -70,15 +70,25 @@ const Leads = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      setLeads(
-        leads.map((lead) =>
-          lead._id === editingLead._id ? response.data.lead : lead
-        )
-      );
+      
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((lead) => {
+        if (lead._id === editingLead._id) {
+          return {
+            ...lead,
+            ...response.data.lead,
+            createdBy: lead.createdBy // Preserve the createdBy field
+          };
+        }
+        return lead;
+      });
+
+      setLeads(updatedLeads);
       setEditingLead(null);
       toast.success("Lead updated successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update lead");
+      console.error(err);
     }
   };
 

@@ -20,7 +20,7 @@ const AddLeads = () => {
     purpose: "",
     remarks: "",
     potential: ["Warm"],
-    status: ["open"],
+    status: ["new"],
     requirement: "",
     budget: "",
     source: "",

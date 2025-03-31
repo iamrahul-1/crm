@@ -66,16 +66,25 @@ const FavoriteLeads = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      setLeads(
-        leads.map((lead) =>
-          lead._id === editingLead._id ? response.data.lead : lead
-        )
-      );
+      
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((lead) => {
+        if (lead._id === editingLead._id) {
+          return {
+            ...lead,
+            ...response.data.lead,
+            createdBy: lead.createdBy // Preserve the createdBy field
+          };
+        }
+        return lead;
+      });
+
+      setLeads(updatedLeads);
       setEditingLead(null);
       toast.success("Lead updated successfully");
-    } catch (error) {
-      toast.error("Failed to update lead");
-      console.error(error);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update lead");
+      console.error(err);
     }
   };
 
@@ -83,11 +92,29 @@ const FavoriteLeads = () => {
     setCurrentPage(newPage);
   };
 
-  const toggleFavorite = async (id) => {
+  const toggleFavorite = async (id, lead) => {
     try {
-      await api.put(`/leads/${id}`, { favourite: false });
-      setLeads(leads.filter((lead) => lead._id !== id));
-      toast.success("Removed from favorites");
+      const isFavorite = !lead.favourite;
+      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
+
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((l) => {
+        if (l._id === id) {
+          return {
+            ...l,
+            ...response.data.lead,
+            createdBy: l.createdBy // Preserve the createdBy field
+          };
+        }
+        return l;
+      });
+
+      setLeads(updatedLeads);
+
+      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
+        type: isFavorite ? "success" : "info",
+        toastId: `favorite-${id}`,
+      });
     } catch (err) {
       toast.error(
         err.response?.data?.message || "Failed to update favorite status"
