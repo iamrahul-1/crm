@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
 import ViewLeadModal from "../components/ViewLeadModal";
+import { getLeadTableColumns } from "../components/TableDefinitions";
 
 const MissedLeads = () => {
   const navigate = useNavigate();
@@ -77,56 +78,11 @@ const MissedLeads = () => {
     setViewingLead(row);
   };
 
-  const columns = [
-    {
-      header: "Name",
-      accessor: "name",
-    },
-    {
-      header: "Phone Number",
-      accessor: "phone",
-    },
-    {
-      header: "Purpose",
-      accessor: "purpose",
-    },
-    {
-      header: "Remarks",
-      accessor: "remarks",
-      render: (row) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => handleViewLead(row)}
-            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            View
-          </button>
-        </div>
-      ),
-    },
-    {
-      header: "Action",
-      accessor: "action",
-      render: (row) => (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => setEditingLead(row)}
-            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-            title="Edit"
-          >
-            <FiEdit2 size={18} />
-          </button>
-          <button
-            onClick={() => setDeleteConfirm(row._id)}
-            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-            title="Delete"
-          >
-            <FiTrash2 size={18} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const columns = getLeadTableColumns({
+    handleViewLead,
+    setEditingLead,
+    setDeleteConfirm,
+  });
 
   const filteredLeads = leads.filter((lead) => {
     return (

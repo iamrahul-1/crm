@@ -12,6 +12,8 @@ import {
 
 const AddLeads = () => {
   const navigate = useNavigate();
+  // Add loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -20,6 +22,15 @@ const AddLeads = () => {
     potential: ["warm"],
     status: ["open"],
     requirement: "",
+    budget: "",
+    source: "",
+    date: new Date().toISOString().split("T")[0], // Add current date
+    time: new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }), // Add current time
+    favourite: false, // Add favourite field
   });
 
   const [errors, setErrors] = useState({});
@@ -110,6 +121,7 @@ const AddLeads = () => {
       return;
     }
 
+    setIsSubmitting(true); // Set loading state to true before API call
     try {
       await api.post("/leads", formData);
       toast.success("Lead added successfully!");
@@ -126,6 +138,8 @@ const AddLeads = () => {
             "Failed to add lead. Please try again."
         );
       }
+    } finally {
+      setIsSubmitting(false); // Reset loading state
     }
   };
 
@@ -238,7 +252,7 @@ const AddLeads = () => {
                 </div>
 
                 {/* Date Input */}
-                {/* Requirement Input (replacing Date) */}
+                {/* Requirement Input */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
                     Requirement
@@ -254,14 +268,34 @@ const AddLeads = () => {
                       <option value="" disabled>
                         Select requirement
                       </option>
-                      <option value="3BHK">3 BHK</option>
-                      <option value="4BHK">4 BHK</option>
+                      <option value="3">3 BHK</option>
+                      <option value="4">4 BHK</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Source Input - New Field */}
-                {/* Source Input - Changed from dropdown to text field */}
+                {/* Budget Input */}
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Budget (in Cr)
+                  </label>
+                  <select
+                    name="budget"
+                    value={formData.budget || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                  >
+                    <option value="" disabled>
+                      Select budget
+                    </option>
+                    <option value="50 L">50 Lakhs</option>
+                    <option value="1 Cr">1 Cr</option>
+                    <option value="2 Cr">2 Cr</option>
+                    <option value="3 Cr">3 Cr</option>
+                  </select>
+                </div>
+
+                {/* Source Input */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
                     Source
@@ -365,19 +399,28 @@ const AddLeads = () => {
               </div>
             </div>
 
-            <div className="flex gap-4 justify-end mt-2">
+            <div className="flex gap-4 justify-end mt-6">
               <button
                 type="button"
                 onClick={() => navigate("/leads/all")}
-                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                disabled={isSubmitting}
               >
-                Save Lead
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  "Save Lead"
+                )}
               </button>
             </div>
           </form>

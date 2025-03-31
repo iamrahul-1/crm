@@ -47,11 +47,12 @@ const leadDropdownLinks = [
   {
     id: 7,
     path: "/leads/schedule",
-    label: "Schedule Visits",
+    label: "Scheduled Visits",
     subLinks: [
       { id: "sch1", path: "/leads/schedule/today", label: "Today" },
       { id: "sch2", path: "/leads/schedule/tomorrow", label: "Tomorrow" },
       { id: "sch3", path: "/leads/schedule/weekend", label: "Weekend" },
+      { id: "sch3", path: "/leads/schedule/custom", label: "Custom" },
     ],
   },
   { id: 8, path: "/leads/rejected", label: "Rejected Leads" },

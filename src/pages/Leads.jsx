@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { AiFillHeart } from "react-icons/ai";
-import { FiEdit2, FiTrash2, FiSearch, FiEye } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
-import ViewLeadModal from "../components/ViewLeadModal"; // updated import path
+import ViewLeadModal from "../components/ViewLeadModal";
+import { getLeadTableColumns } from "../components/TableDefinitions";
+
 const Leads = () => {
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
@@ -19,26 +19,53 @@ const Leads = () => {
   const [viewingLead, setViewingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const limit = 10;
 
-  useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        const response = await api.get(
-          `/leads?page=${currentPage}&limit=${limit}`
-        );
-        setLeads(response.data.leads || []);
-        setTotalPages(response.data.totalPages || 1);
-        setLoading(false);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch leads");
-        setLoading(false);
-        toast.error(err.response?.data?.message || "Failed to fetch leads. Please try again later.");
-      }
-    };
+  const fetchUser = useCallback(async () => {
+    try {
+      const response = await api.get("/auth/me");
+      setCurrentUser(response.data.name);
+      console.log(response.data.name);
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  }, []);
 
+  const fetchLeads = useCallback(async () => {
+    try {
+      const response = await api.get(
+        `/leads?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+      );
+      const updatedLeads = response.data.leads.map((lead) => ({
+        ...lead,
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser
+      }));
+      setLeads(updatedLeads);
+      setTotalPages(response.data.totalPages || 1);
+      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch leads");
+      setLoading(false);
+      toast.error(
+        err.response?.data?.message || "Failed to fetch leads. Please try again later."
+      );
+    }
+  }, [currentPage, limit, searchQuery, currentUser]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchLeads();
+    }
+  }, [fetchLeads, currentUser]);
+
+  const refreshLeads = () => {
     fetchLeads();
-  }, [currentPage]);
+  };
 
   const handleEdit = async (updatedData) => {
     try {
@@ -59,21 +86,25 @@ const Leads = () => {
     setCurrentPage(newPage);
   };
 
+  const handleViewLead = (row) => {
+    setViewingLead(row);
+  };
+
   const toggleFavorite = async (id, lead) => {
     try {
       const isFavorite = !lead.favourite;
       const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-      setLeads(leads.map(l => 
-        l._id === id ? response.data.lead : l
-      ));
+      setLeads(leads.map((l) => (l._id === id ? response.data.lead : l)));
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
         type: isFavorite ? "success" : "info",
         toastId: `favorite-${id}`,
       });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update favorite status");
+      toast.error(
+        err.response?.data?.message || "Failed to update favorite status"
+      );
       console.error(err);
     }
   };
@@ -89,77 +120,12 @@ const Leads = () => {
     }
   };
 
-  const handleViewLead = (row) => {
-    setViewingLead(row);
-  };
-
-  const columns = [
-    {
-      header: "Name",
-      accessor: "name",
-    },
-    {
-      header: "Phone Number",
-      accessor: "phone",
-    },
-    {
-      header: "Purpose",
-      accessor: "purpose",
-    },
-    {
-      header: "Remarks",
-      accessor: "remarks",
-      render: (row) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => handleViewLead(row)}
-            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            View
-          </button>
-        </div>
-      ),
-    },
-    {
-      header: "Action",
-      accessor: "action",
-      render: (row) => (
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => handleViewLead(row)}
-            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-            title="View Details"
-          >
-            <FiEye size={18} />
-          </button>
-          <button
-            onClick={() => setEditingLead(row)}
-            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-            title="Edit"
-          >
-            <FiEdit2 size={18} />
-          </button>
-          <button
-            onClick={() => setDeleteConfirm(row._id)}
-            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-            title="Delete"
-          >
-            <FiTrash2 size={18} />
-          </button>
-          <button
-            onClick={() => toggleFavorite(row._id, row)}
-            className="p-1.5 rounded-lg transition-colors"
-            title={row.favourite ? "Remove from favorites" : "Add to favorites"}
-          >
-            <AiFillHeart
-              size={20}
-              className={row.favourite ? "text-red-500" : "text-gray-300"}
-            />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const columns = getLeadTableColumns({
+    handleViewLead,
+    setEditingLead,
+    setDeleteConfirm,
+    toggleFavorite,
+  });
 
   const filteredLeads = leads.filter((lead) => {
     return (
@@ -183,16 +149,12 @@ const Leads = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="relative flex-1 sm:max-w-md">
-                <FiSearch
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
                 <input
                   type="text"
                   placeholder="Search leads..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
               <button
@@ -275,7 +237,10 @@ const Leads = () => {
       {viewingLead && (
         <ViewLeadModal
           lead={viewingLead}
-          onClose={() => setViewingLead(null)}
+          onClose={() => {
+            setViewingLead(null);
+            refreshLeads();
+          }}
         />
       )}
     </div>
