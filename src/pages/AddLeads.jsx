@@ -19,7 +19,7 @@ const AddLeads = () => {
     phone: "",
     purpose: "",
     remarks: "",
-    potential: ["warm"],
+    potential: ["Warm"],
     status: ["open"],
     requirement: "",
     budget: "",
@@ -330,7 +330,7 @@ const AddLeads = () => {
                     Lead Potential
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {["hot", "warm", "cold"].map((potential) => (
+                    {["Hot", "Warm", "Cold"].map((potential) => (
                       <label
                         key={potential}
                         className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50"
