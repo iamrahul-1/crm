@@ -25,8 +25,8 @@ const Leads = () => {
   const fetchUser = useCallback(async () => {
     try {
       const response = await api.get("/auth/me");
-      setCurrentUser(response.data.name);
-      console.log(response.data.name);
+      setCurrentUser(response.data);
+      console.log(response.data);
     } catch (err) {
       console.error("Failed to fetch user:", err);
     }
@@ -39,7 +39,7 @@ const Leads = () => {
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -95,7 +95,19 @@ const Leads = () => {
       const isFavorite = !lead.favourite;
       const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-      setLeads(leads.map((l) => (l._id === id ? response.data.lead : l)));
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((l) => {
+        if (l._id === id) {
+          return {
+            ...l,
+            ...response.data.lead,
+            createdBy: l.createdBy // Preserve the createdBy field
+          };
+        }
+        return l;
+      });
+
+      setLeads(updatedLeads);
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
         type: isFavorite ? "success" : "info",

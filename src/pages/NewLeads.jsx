@@ -1,5 +1,5 @@
 // React is required for JSX compilation
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { FiSearch } from "react-icons/fi";
@@ -18,30 +18,51 @@ const NewLeads = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingLead, setEditingLead] = useState(null);
+  const [viewingLead, setViewingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [viewingLead, setViewingLead] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const limit = 10;
 
-  useEffect(() => {
-    const fetchNewLeads = async () => {
-      try {
-        const response = await api.get(
-          `/leads/status/open?page=${currentPage}&limit=${limit}`
-        );
-        setLeads(response.data.leads || []);
-        setTotalPages(response.data.totalPages || 1);
-        setLoading(false);
-      } catch (error) {
-        setError("Failed to fetch open leads");
-        setLoading(false);
-        toast.error("Failed to fetch open leads. Please try again later.");
-        console.error(error);
-      }
-    };
+  const fetchUser = useCallback(async () => {
+    try {
+      const response = await api.get("/auth/me");
+      setCurrentUser(response.data);
+      console.log(response.data);
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  }, []);
 
-    fetchNewLeads();
-  }, [currentPage]);
+  const fetchNewLeads = useCallback(async () => {
+    try {
+      const response = await api.get(
+        `/leads/status/open?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+      );
+      const updatedLeads = response.data.leads.map((lead) => ({
+        ...lead,
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
+      }));
+      setLeads(updatedLeads);
+      setTotalPages(response.data.totalPages || 1);
+      setLoading(false);
+    } catch (error) {
+      setError("Failed to fetch open leads");
+      setLoading(false);
+      toast.error("Failed to fetch open leads. Please try again later.");
+      console.error(error);
+    }
+  }, [currentPage, limit, searchQuery, currentUser]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchNewLeads();
+    }
+  }, [fetchNewLeads, currentUser]);
 
   const handleEdit = async (updatedData) => {
     try {

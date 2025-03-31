@@ -37,11 +37,7 @@ export const getLeadTableColumns = ({
   {
     header: "Created By",
     accessor: "createdBy",
-    render: (row) => (
-      <div className="text-center">
-        {row.createdBy}
-      </div>
-    ),
+    render: (row) => <div className="text-center">{row.createdBy}</div>,
   },
   {
     header: "Action",
