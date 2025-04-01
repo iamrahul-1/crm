@@ -36,11 +36,11 @@ const MissedLeads = () => {
   const fetchMissedLeads = useCallback(async () => {
     try {
       const response = await api.get(
-        `/leads/status/missed?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/autostatus/missed?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -66,14 +66,14 @@ const MissedLeads = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
+
       // Find the lead in the current state and update it
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy // Preserve the createdBy field
+            createdBy: lead.createdBy, // Preserve the createdBy field
           };
         }
         return lead;
@@ -134,7 +134,7 @@ const MissedLeads = () => {
           return {
             ...l,
             ...response.data.lead,
-            createdBy: l.createdBy // Preserve the createdBy field
+            createdBy: l.createdBy, // Preserve the createdBy field
           };
         }
         return l;
@@ -153,6 +153,10 @@ const MissedLeads = () => {
       console.error(err);
     }
   };
+
+  const refreshLeads = useCallback(() => {
+    fetchMissedLeads();
+  }, [fetchMissedLeads]);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -263,7 +267,10 @@ const MissedLeads = () => {
       {viewingLead && (
         <ViewLeadModal
           lead={viewingLead}
-          onClose={() => setViewingLead(null)}
+          onClose={() => {
+            setViewingLead(null);
+          }}
+          onRefresh={refreshLeads}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AgCharts } from "ag-charts-react";
 import {
   FiUsers,
@@ -10,24 +10,77 @@ import {
   FiPieChart,
   FiBarChart2,
 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const [options1, setOptions1] = useState({});
   const [options2, setOptions2] = useState({});
+  const [leadCounts, setLeadCounts] = useState({
+    rejected: 0,
+    favourite: 0,
+    siteVisited: 0,
+    today: 0,
+    missed: 0,
+    weekend: 0,
+  });
+
+  const fetchLeadCounts = async () => {
+    try {
+      const [
+        rejectedRes,
+        favouriteRes,
+        siteVisitedRes,
+        todayRes,
+        missedRes,
+        weekendRes,
+      ] = await Promise.all([
+        api.get(`/leads/status/rejected`),
+        api.get(`/leads/status/favorite`),
+        api.get(`/leads/status/sitevisited`),
+        api.get(`/leads/schedule/today`),
+        api.get(`/leads/status/missed`),
+        api.get(`/leads/schedule/weekend`),
+      ]);
+
+      setLeadCounts({
+        rejected: rejectedRes.data.leads.length,
+        favourite: favouriteRes.data.leads.length,
+        siteVisited: siteVisitedRes.data.leads.length,
+        today: todayRes.data.leads.length,
+        missed: missedRes.data.leads.length,
+        weekend: weekendRes.data.leads.length,
+      });
+    } catch (error) {
+      console.error("Error fetching lead counts:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeadCounts();
+  }, []);
 
   // First chart data
-  const getData1 = () => [
-    { asset: "Rejected", amount: 4 },
-    { asset: "Favourite", amount: 46 },
-    { asset: "Site Visited", amount: 38 },
-  ];
+  const getData1 = useCallback(
+    () => [
+      { asset: "Rejected", amount: leadCounts.rejected },
+      { asset: "Favourite", amount: leadCounts.favourite },
+      { asset: "Site Visited", amount: leadCounts.siteVisited },
+    ],
+    [leadCounts]
+  );
 
   // Second chart data
-  const getData2 = () => [
-    { asset: "Today", amount: 98 },
-    { asset: "Missed", amount: 55 },
-    { asset: "Weekend", amount: 112 },
-  ];
+  const getData2 = useCallback(
+    () => [
+      { asset: "Today", amount: leadCounts.today },
+      { asset: "Missed", amount: leadCounts.missed },
+      { asset: "Weekend", amount: leadCounts.weekend },
+    ],
+    [leadCounts]
+  );
 
   useEffect(() => {
     const commonOptions = {
@@ -41,6 +94,7 @@ const Dashboard = () => {
         left: 20,
       },
       legend: {
+        enabled: true,
         position: "bottom",
         item: {
           label: {
@@ -85,7 +139,7 @@ const Dashboard = () => {
       ],
     };
 
-    setOptions1({
+    const options1 = {
       ...commonOptions,
       data: getData1(),
       series: [
@@ -101,9 +155,9 @@ const Dashboard = () => {
           },
         },
       ],
-    });
+    };
 
-    setOptions2({
+    const options2 = {
       ...commonOptions,
       data: getData2(),
       series: [
@@ -119,18 +173,30 @@ const Dashboard = () => {
           },
         },
       ],
-    });
-  }, []);
+    };
 
-  const StatCard = ({ icon: Icon, color, label, value }) => (
-    <div className="bg-white rounded-lg shadow-sm p-6 w-full">
+    setOptions1(options1);
+    setOptions2(options2);
+  }, [getData1, getData2]);
+
+  const StatCard = ({
+    icon: Icon,
+    color,
+    label,
+    value,
+    onClick = () => {},
+  }) => (
+    <div
+      className="bg-white rounded-lg shadow-sm p-6 w-full cursor-pointer hover:shadow-md transition-all duration-200"
+      onClick={onClick}
+    >
       <div className="flex items-center gap-4">
-        <div className={`p-2.5 ${color} rounded-lg`}>
-          <Icon className="h-5 w-5 text-white" />
+        <div className={`p-3 rounded-lg ${color} text-white`}>
+          <Icon className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-sm text-gray-600 font-medium">{label}</h3>
-          <p className="text-xl font-semibold text-gray-800 mt-1">{value}</p>
+          <h3 className="text-sm font-medium text-gray-600">{label}</h3>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
       </div>
     </div>
@@ -168,18 +234,21 @@ const Dashboard = () => {
                 color="bg-blue-600"
                 label="Today's Leads"
                 value="50"
+                onClick={() => navigate("/leads/all")}
               />
               <StatCard
                 icon={FiClock}
                 color="bg-gray-600"
                 label="Missed Leads"
                 value="45"
+                onClick={() => navigate("/leads/missed")}
               />
               <StatCard
                 icon={FiStar}
                 color="bg-purple-600"
                 label="Favorite Leads"
                 value="50"
+                onClick={() => navigate("/leads/favourite")}
               />
             </div>
 
@@ -200,19 +269,19 @@ const Dashboard = () => {
                     icon={FiThermometer}
                     color="bg-red-500"
                     label="Hot Lead"
-                    value="4"
+                    value={leadCounts.rejected}
                   />
                   <LeadTypeCard
                     icon={FiSun}
                     color="bg-orange-500"
                     label="Warm Lead"
-                    value="46"
+                    value={leadCounts.favourite}
                   />
                   <LeadTypeCard
                     icon={FiCloud}
                     color="bg-blue-500"
                     label="Cold Lead"
-                    value="38"
+                    value={leadCounts.siteVisited}
                   />
                 </div>
               </div>

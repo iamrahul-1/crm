@@ -261,8 +261,8 @@ const Leads = () => {
           lead={viewingLead}
           onClose={() => {
             setViewingLead(null);
-            refreshLeads();
           }}
+          onRefresh={refreshLeads}
         />
       )}
     </div>

@@ -37,7 +37,7 @@ const NewLeads = () => {
   const fetchNewLeads = useCallback(async () => {
     try {
       const response = await api.get(
-        `/leads/status/new?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/autostatus/new?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
@@ -140,6 +140,10 @@ const NewLeads = () => {
     setViewingLead(row);
   };
 
+  const refreshLeads = useCallback(() => {
+    fetchNewLeads();
+  }, [fetchNewLeads]);
+
   const columns = getLeadTableColumns({
     handleViewLead,
     setEditingLead,
@@ -164,7 +168,7 @@ const NewLeads = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
               <h1 className="text-2xl font-semibold text-gray-900">
-                Open Leads
+                New Leads
               </h1>
               <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
                 <FiSearch className="w-5 h-5 text-gray-500" />
@@ -265,7 +269,10 @@ const NewLeads = () => {
       {viewingLead && (
         <ViewLeadModal
           lead={viewingLead}
-          onClose={() => setViewingLead(null)}
+          onClose={() => {
+            setViewingLead(null);
+          }}
+          onRefresh={refreshLeads}
         />
       )}
     </div>

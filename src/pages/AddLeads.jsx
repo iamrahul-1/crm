@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
 import { toast } from "react-toastify";
+import api from "../services/api";
 import {
   FiUser,
+  FiEdit2,
+  FiTrash2,
+  FiSearch,
   FiPhone,
-  FiTarget,
-  FiMessageSquare,
-  FiCalendar,
 } from "react-icons/fi";
 
 const AddLeads = () => {
@@ -20,17 +20,18 @@ const AddLeads = () => {
     purpose: "",
     remarks: "",
     potential: ["Warm"],
-    status: ["new"],
+    status: "", // Empty string by default
     requirement: "",
     budget: "",
     source: "",
-    date: new Date().toISOString().split("T")[0], // Add current date
-    time: new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }), // Add current time
-    favourite: false, // Add favourite field
+    date: (() => {
+      const date = new Date();
+      date.setDate(date.getDate() + 2);
+      return date.toISOString().split("T")[0];
+    })(),
+    favourite: false,
+    autostatus: "new", // Set to new by default
+    schedule: "", // Empty string for schedule
   });
 
   const [errors, setErrors] = useState({});
@@ -67,53 +68,39 @@ const AddLeads = () => {
     }
 
     if (name === "phone") {
+      // Allow only numbers and limit to 10 digits
       const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
-      const phoneNumber = sanitizedValue ? parseInt(sanitizedValue, 10) : "";
-      setFormData((prev) => ({ ...prev, [name]: phoneNumber }));
-
-      if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
-        setErrors((prev) => ({
-          ...prev,
-          phone: "Phone number must be 10 digits",
-        }));
-      } else {
-        setErrors((prev) => ({ ...prev, phone: "" }));
-      }
+      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
     } else if (name === "date") {
       if (validateDate(value)) {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
       }
-    } else if (name === "potential" || name === "status") {
-      // Handle array fields
+    } else if (name === "potential") {
       setFormData((prev) => ({ ...prev, [name]: [value] }));
+    } else if (name === "status") {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
-      if (errors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: "" }));
-      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log("Form data before submission:", formData);
+
     // Validate required fields and phone number
     const requiredFields = ["name", "phone", "purpose"];
     const newErrors = {};
+
     requiredFields.forEach((field) => {
       if (!formData[field]) {
-        newErrors[field] = `${
-          field.charAt(0).toUpperCase() + field.slice(1)
-        } is required`;
+        newErrors[field] = "This field is required";
       }
     });
 
-    // Add phone validation
-    if (!validatePhone(formData.phone.toString())) {
-      newErrors.phone = "Phone number must be 10 digits";
+    if (newErrors.phone) {
+      newErrors.phone = "Phone number is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -123,14 +110,26 @@ const AddLeads = () => {
 
     setIsSubmitting(true); // Set loading state to true before API call
     try {
-      await api.post("/leads", formData);
+      // Create a copy of formData
+      const dataToSend = { ...formData };
+
+      // Remove status if it's empty or "new"
+      if (!dataToSend.status || dataToSend.status === "new") {
+        delete dataToSend.status;
+      }
+
+      console.log("Data being sent to API:", dataToSend);
+      const response = await api.post("/leads", dataToSend);
+      console.log("API response:", response.data);
       toast.success("Lead added successfully!");
       navigate("/leads/new");
     } catch (error) {
+      console.error("Error details:", error);
+      console.error("Error response:", error.response?.data);
       if (error.response?.data?.field === "phone") {
         setErrors((prev) => ({
           ...prev,
-          phone: "Phone number already exists",
+          phone: error.response?.data?.message,
         }));
       } else {
         toast.error(
@@ -139,18 +138,18 @@ const AddLeads = () => {
         );
       }
     } finally {
-      setIsSubmitting(false); // Reset loading state
+      setIsSubmitting(false);
     }
   };
 
-  const statusDisplayMap = {
-    open: "Open",
-    inprogress: "In Progress",
-    sitevisitscheduled: "Site Visit Scheduled",
-    sitevisited: "Site Visited",
-    closed: "Closed",
-    rejected: "Rejected",
-  };
+  const statusOptions = [
+    { value: "open", label: "Open" },
+    { value: "inprogress", label: "In Progress" },
+    { value: "sitevisitscheduled", label: "Site Visit Scheduled" },
+    { value: "sitevisited", label: "Site Visited" },
+    { value: "closed", label: "Closed" },
+    { value: "rejected", label: "Rejected" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -201,25 +200,16 @@ const AddLeads = () => {
                   <label className="block text-sm text-gray-600 mb-2">
                     Phone Number
                   </label>
-                  <div className="relative">
-                    <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone ? formData.phone.toString() : ""}
-                      onChange={handleChange}
-                      placeholder="Enter 10 digit number"
-                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
-                        dirtyFields.phone && errors.phone
-                          ? "border-red-500"
-                          : "border-gray-200"
-                      } rounded-lg text-sm text-gray-800`}
-                      required
-                    />
-                  </div>
-                  {dirtyFields.phone && errors.phone && (
-                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                  )}
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone || ""}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                  />
                 </div>
 
                 {/* Purpose Input */}
@@ -250,15 +240,13 @@ const AddLeads = () => {
                     </p>
                   )}
                 </div>
-
-                {/* Date Input */}
                 {/* Requirement Input */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
                     Requirement
                   </label>
                   <div className="relative">
-                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <select
                       name="requirement"
                       value={formData.requirement || ""}
@@ -268,8 +256,8 @@ const AddLeads = () => {
                       <option value="" disabled>
                         Select requirement
                       </option>
-                      <option value="3">3 BHK</option>
-                      <option value="4">4 BHK</option>
+                      <option value="3 BHK">3 BHK</option>
+                      <option value="4 BHK">4 BHK</option>
                     </select>
                   </div>
                 </div>
@@ -316,7 +304,7 @@ const AddLeads = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2.5 bg-green-50 rounded-lg">
-                  <FiTarget className="w-5 h-5 text-green-600" />
+                  <FiEdit2 className="w-5 h-5 text-green-600" />
                 </div>
                 <h2 className="text-base font-medium text-gray-800">
                   Lead Classification
@@ -358,17 +346,19 @@ const AddLeads = () => {
                   </label>
                   <select
                     name="status"
-                    value={formData.status[0]}
-                    onChange={handleChange}
+                    value={formData.status}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData((prev) => ({ ...prev, status: value }));
+                    }}
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                   >
-                    {Object.entries(statusDisplayMap).map(
-                      ([value, display]) => (
-                        <option key={value} value={value}>
-                          {display}
-                        </option>
-                      )
-                    )}
+                    <option value="">Select status</option>
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -378,7 +368,7 @@ const AddLeads = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2.5 bg-purple-50 rounded-lg">
-                  <FiMessageSquare className="w-5 h-5 text-purple-600" />
+                  <FiTrash2 className="w-5 h-5 text-purple-600" />
                 </div>
                 <h2 className="text-base font-medium text-gray-800">
                   Additional Information

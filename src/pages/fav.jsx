@@ -139,6 +139,10 @@ const FavoriteLeads = () => {
     setViewingLead(row);
   };
 
+  const refreshLeads = () => {
+    fetchFavoriteLeads();
+  };
+
   const columns = getLeadTableColumns({
     handleViewLead,
     setEditingLead,
@@ -264,7 +268,10 @@ const FavoriteLeads = () => {
       {viewingLead && (
         <ViewLeadModal
           lead={viewingLead}
-          onClose={() => setViewingLead(null)}
+          onClose={() => {
+            setViewingLead(null);
+          }}
+          onRefresh={refreshLeads}
         />
       )}
     </div>
