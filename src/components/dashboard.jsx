@@ -41,7 +41,7 @@ const Dashboard = () => {
         api.get(`/leads/status/favorite`),
         api.get(`/leads/status/sitevisited`),
         api.get(`/leads/schedule/today`),
-        api.get(`/leads/status/missed`),
+        api.get(`/leads/autostatus/missed`),
         api.get(`/leads/schedule/weekend`),
       ]);
 

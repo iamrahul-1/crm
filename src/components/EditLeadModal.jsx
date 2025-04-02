@@ -8,71 +8,51 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     name: lead.name,
     phone: lead.phone,
     purpose: lead.purpose,
-    budget: lead.budget || "",
-    source: lead.source || "",
-    requirement: lead.requirement || "",
-    remarks: lead.remarks || "", // Add remarks back to formData but don't display it
+    requirement: lead.requirement,
+    budget: lead.budget,
+    source: lead.source,
+    date: lead.date || (() => {
+      const date = new Date();
+      date.setDate(date.getDate() + 2);
+      return date.toISOString().split("T")[0];
+    })(),
+    favourite: lead.favourite || false,
+    autostatus: lead.autostatus || "new",
+    schedule: lead.schedule,
   });
 
   const [errors, setErrors] = useState({});
   const [dirtyFields, setDirtyFields] = useState({});
 
-  const validatePhone = (phone) => {
-    const phoneRegex = /^\d{10}$/;
-    return phoneRegex.test(phone);
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Mark field as dirty on first change
-    if (!dirtyFields[name]) {
-      setDirtyFields((prev) => ({
-        ...prev,
-        [name]: true,
-      }));
-    }
+    setDirtyFields((prev) => ({ ...prev, [name]: true }));
 
     if (name === "phone") {
       const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
-      const phoneNumber = sanitizedValue ? parseInt(sanitizedValue, 10) : "";
-      setFormData((prev) => ({ ...prev, [name]: phoneNumber }));
+      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
 
-      if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "phone" && value) {
+      if (value.length !== 10) {
         setErrors((prev) => ({
           ...prev,
           phone: "Phone number must be 10 digits",
         }));
       } else {
-        setErrors((prev) => ({ ...prev, phone: "" }));
-      }
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-      if (errors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: "" }));
+        setErrors((prev) => ({
+          ...prev,
+          phone: undefined,
+        }));
       }
     }
-  };
-
-  const validateForm = () => {
-    // Validate required fields and phone number
-    const requiredFields = ["name", "phone", "purpose"];
-    const newErrors = {};
-    requiredFields.forEach((field) => {
-      if (!formData[field]) {
-        newErrors[field] = `${
-          field.charAt(0).toUpperCase() + field.slice(1)
-        } is required`;
-      }
-    });
-
-    // Add phone validation
-    if (formData.phone && !validatePhone(formData.phone.toString())) {
-      newErrors.phone = "Phone number must be 10 digits";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,13 +60,30 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    // Validate required fields and phone number
+    const requiredFields = ["name", "phone"];
+    const newErrors = {};
+
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        newErrors[field] = "This field is required";
+      }
+    });
+
+    if (newErrors.phone) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onSave(formData);
+      const dataToSend = { ...formData };
+
+      await onSave(dataToSend);
     } catch (error) {
       console.error("Failed to save:", error);
     } finally {
@@ -152,14 +149,18 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   <input
                     type="tel"
                     name="phone"
-                    value={formData.phone ? formData.phone.toString() : ""}
+                    value={formData.phone || ""}
                     onChange={handleChange}
-                    placeholder="Enter 10 digit number"
+                    onBlur={handleBlur}
+                    placeholder="Enter phone number"
                     className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
                       dirtyFields.phone && errors.phone
                         ? "border-red-500"
                         : "border-gray-200"
                     } rounded-lg text-sm text-gray-800`}
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    maxLength="10"
                     required
                   />
                 </div>
@@ -177,12 +178,7 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   name="purpose"
                   value={formData.purpose}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2.5 bg-white border ${
-                    dirtyFields.purpose && errors.purpose
-                      ? "border-red-500"
-                      : "border-gray-200"
-                  } rounded-lg text-sm text-gray-800 appearance-none`}
-                  required
+                  className={`w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 appearance-none`}
                 >
                   <option value="" disabled>
                     Select purpose
@@ -190,9 +186,6 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   <option value="Investment">Investment</option>
                   <option value="User">User</option>
                 </select>
-                {dirtyFields.purpose && errors.purpose && (
-                  <p className="text-red-500 text-xs mt-1">{errors.purpose}</p>
-                )}
               </div>
 
               {/* Requirement Input */}
@@ -211,8 +204,8 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                     <option value="" disabled>
                       Select requirement
                     </option>
-                    <option value="3">3 BHK</option>
-                    <option value="4">4 BHK</option>
+                    <option value="3 BHK">3 BHK</option>
+                    <option value="4 BHK">4 BHK</option>
                   </select>
                 </div>
               </div>
@@ -220,22 +213,16 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
               {/* Budget Input */}
               <div>
                 <label className="block text-sm text-gray-600 mb-2">
-                  Budget (in Cr)
+                  Budget
                 </label>
-                <select
+                <input
+                  type="text"
                   name="budget"
                   value={formData.budget || ""}
                   onChange={handleChange}
+                  placeholder="Enter budget"
                   className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
-                >
-                  <option value="" disabled>
-                    Select budget
-                  </option>
-                  <option value="50 L">50 Lakhs</option>
-                  <option value="1 Cr">1 Cr</option>
-                  <option value="2 Cr">2 Cr</option>
-                  <option value="3 Cr">3 Cr</option>
-                </select>
+                />
               </div>
 
               {/* Source Input */}
@@ -243,14 +230,24 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                 <label className="block text-sm text-gray-600 mb-2">
                   Source
                 </label>
-                <input
-                  type="text"
+                <select
                   name="source"
                   value={formData.source || ""}
                   onChange={handleChange}
-                  placeholder="Enter source"
                   className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
-                />
+                >
+                  <option value="" disabled>
+                    Select source
+                  </option>
+                  <option value="walkin">Walk-In</option>
+                  <option value="portals">Portals</option>
+                  <option value="meta_ads">Meta Ads</option>
+                  <option value="google_ads">Google Ads</option>
+                  <option value="cp">CP</option>
+                  <option value="newspaper_ads">Newspaper Ads</option>
+                  <option value="hoardings">Hoardings/Banner</option>
+                  <option value="reference">Reference</option>
+                </select>
               </div>
             </div>
           </div>
@@ -286,7 +283,12 @@ EditLeadModal.propTypes = {
     budget: PropTypes.string,
     source: PropTypes.string,
     requirement: PropTypes.string,
-    remarks: PropTypes.string, // Add this back
+    potential: PropTypes.arrayOf(PropTypes.string),
+    status: PropTypes.string,
+    date: PropTypes.string,
+    favourite: PropTypes.bool,
+    autostatus: PropTypes.string,
+    schedule: PropTypes.string,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,

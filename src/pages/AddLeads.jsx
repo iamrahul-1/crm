@@ -2,19 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../services/api";
-import { FiUser, FiEdit2, FiTrash2, FiSearch, FiPhone } from "react-icons/fi";
+import { FiUser, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 
 const AddLeads = () => {
   const navigate = useNavigate();
-  // Add loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     purpose: "",
     remarks: "",
-    potential: ["Warm"],
-    status: "", // Empty string by default
+    potential: [], // Changed from ["Warm"] to empty array
+    status: "",
     requirement: "",
     budget: "",
     source: "",
@@ -24,55 +23,23 @@ const AddLeads = () => {
       return date.toISOString().split("T")[0];
     })(),
     favourite: false,
-    autostatus: "new", // Set to new by default
-    schedule: "", // Empty string for schedule
+    autostatus: "new",
+    schedule: "",
   });
 
   const [errors, setErrors] = useState({});
   const [dirtyFields, setDirtyFields] = useState({});
-  const [dateError, setDateError] = useState("");
-
-  const validatePhone = (phone) => {
-    const phoneRegex = /^\d{10}$/;
-    return phoneRegex.test(phone);
-  };
-
-  const validateDate = (date) => {
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
-
-    if (selectedDate < today) {
-      setDateError("Please select today or a future date");
-      return false;
-    }
-    setDateError("");
-    return true;
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Mark field as dirty on first change
-    if (!dirtyFields[name]) {
-      setDirtyFields((prev) => ({
-        ...prev,
-        [name]: true,
-      }));
-    }
+    setDirtyFields((prev) => ({ ...prev, [name]: true }));
 
     if (name === "phone") {
-      // Allow only numbers and limit to 10 digits
       const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
       setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
-    } else if (name === "date") {
-      if (validateDate(value)) {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-      }
     } else if (name === "potential") {
       setFormData((prev) => ({ ...prev, [name]: [value] }));
-    } else if (name === "status") {
-      setFormData((prev) => ({ ...prev, [name]: value }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -81,10 +48,8 @@ const AddLeads = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Form data before submission:", formData);
-
     // Validate required fields and phone number
-    const requiredFields = ["name", "phone", "purpose"];
+    const requiredFields = ["name", "phone"];
     const newErrors = {};
 
     requiredFields.forEach((field) => {
@@ -145,6 +110,24 @@ const AddLeads = () => {
     { value: "rejected", label: "Rejected" },
   ];
 
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "phone" && value) {
+      if (value.length !== 10) {
+        setErrors((prev) => ({
+          ...prev,
+          phone: "Phone number must be 10 digits",
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          phone: undefined,
+        }));
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
@@ -199,11 +182,21 @@ const AddLeads = () => {
                     name="phone"
                     value={formData.phone || ""}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Enter phone number"
-                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                    className={`w-full px-3 py-2.5 bg-white border ${
+                      dirtyFields.phone && errors.phone
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg text-sm text-gray-800`}
                     pattern="[0-9]*"
                     inputMode="numeric"
+                    maxLength="10"
+                    required
                   />
+                  {dirtyFields.phone && errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
                 </div>
 
                 {/* Purpose Input */}
@@ -215,12 +208,7 @@ const AddLeads = () => {
                     name="purpose"
                     value={formData.purpose}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2.5 bg-white border ${
-                      dirtyFields.purpose && errors.purpose
-                        ? "border-red-500"
-                        : "border-gray-200"
-                    } rounded-lg text-sm text-gray-800 appearance-none`}
-                    required
+                    className={`w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 appearance-none`}
                   >
                     <option value="" disabled>
                       Select purpose
@@ -228,11 +216,6 @@ const AddLeads = () => {
                     <option value="Investment">Investment</option>
                     <option value="User">User</option>
                   </select>
-                  {dirtyFields.purpose && errors.purpose && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.purpose}
-                    </p>
-                  )}
                 </div>
                 {/* Requirement Input */}
                 <div>
@@ -285,14 +268,14 @@ const AddLeads = () => {
                     <option value="" disabled>
                       Select source
                     </option>
-                    <option value="Walk-In">Walk-In</option>
-                    <option value="Portals">Portals</option>
-                    <option value="Meta Ads">Meta Ads</option>
-                    <option value="Google Ads">Google Ads</option>
-                    <option value="CP">CP</option>
-                    <option value="Newspaper Ads">Newspaper Ads</option>
-                    <option value="Hoardings/Banner">Hoardings/Banner</option>
-                    <option value="Reference">Reference</option>
+                    <option value="walkin">Walk-In</option>
+                    <option value="portals">Portals</option>
+                    <option value="meta_ads">Meta Ads</option>
+                    <option value="google_ads">Google Ads</option>
+                    <option value="cp">CP</option>
+                    <option value="newspaper_ads">Newspaper Ads</option>
+                    <option value="hoardings">Hoardings/Banner</option>
+                    <option value="reference">Reference</option>
                   </select>
                 </div>
               </div>
