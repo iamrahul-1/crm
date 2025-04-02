@@ -2,13 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../services/api";
-import {
-  FiUser,
-  FiEdit2,
-  FiTrash2,
-  FiSearch,
-  FiPhone,
-} from "react-icons/fi";
+import { FiUser, FiEdit2, FiTrash2, FiSearch, FiPhone } from "react-icons/fi";
 
 const AddLeads = () => {
   const navigate = useNavigate();
@@ -265,22 +259,16 @@ const AddLeads = () => {
                 {/* Budget Input */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
-                    Budget (in Cr)
+                    Budget
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="budget"
                     value={formData.budget || ""}
                     onChange={handleChange}
+                    placeholder="Enter budget"
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
-                  >
-                    <option value="" disabled>
-                      Select budget
-                    </option>
-                    <option value="50 L">50 Lakhs</option>
-                    <option value="1 Cr">1 Cr</option>
-                    <option value="2 Cr">2 Cr</option>
-                    <option value="3 Cr">3 Cr</option>
-                  </select>
+                  />
                 </div>
 
                 {/* Source Input */}
@@ -288,14 +276,24 @@ const AddLeads = () => {
                   <label className="block text-sm text-gray-600 mb-2">
                     Source
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="source"
                     value={formData.source || ""}
                     onChange={handleChange}
-                    placeholder="Enter source"
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
-                  />
+                  >
+                    <option value="" disabled>
+                      Select source
+                    </option>
+                    <option value="Walk-In">Walk-In</option>
+                    <option value="Portals">Portals</option>
+                    <option value="Meta Ads">Meta Ads</option>
+                    <option value="Google Ads">Google Ads</option>
+                    <option value="CP">CP</option>
+                    <option value="Newspaper Ads">Newspaper Ads</option>
+                    <option value="Hoardings/Banner">Hoardings/Banner</option>
+                    <option value="Reference">Reference</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -353,7 +351,9 @@ const AddLeads = () => {
                     }}
                     className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                   >
-                    <option value="">Select status</option>
+                    <option value="" disabled>
+                      Select status
+                    </option>
                     {statusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
