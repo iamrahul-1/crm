@@ -4,12 +4,18 @@ import getEnvConfig from "../config/env";
 
 const { apiUrl } = getEnvConfig();
 
+console.log('API URL configured:', apiUrl);
+
 const api = axios.create({
   baseURL: apiUrl,
   headers: {
     "Content-Type": "application/json",
+    "Accept": "application/json"
   },
-  timeout: 15000, // 15 seconds timeout
+  timeout: 15000,
+  withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN'
 });
 
 // Request Interceptor
@@ -19,9 +25,17 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Log request details
+    console.log('Making request to:', config.url);
+    console.log('Request method:', config.method);
+    console.log('Request headers:', config.headers);
+    console.log('Request data:', config.data);
+    
     return config;
   },
   (error) => {
+    console.error('Request error:', error);
     toast.error("Request failed to send");
     return Promise.reject(error);
   }
@@ -29,8 +43,13 @@ api.interceptors.request.use(
 
 // Response Interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response received:', response.status);
+    console.log('Response data:', response.data);
+    return response;
+  },
   (error) => {
+    console.error('Response error:', error);
     const { response } = error;
     
     if (!response) {
@@ -38,14 +57,19 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Log error details
+    console.error('Error status:', response.status);
+    console.error('Error data:', response.data);
+    console.error('Error headers:', response.headers);
+
     switch (response.status) {
       case 401:
-        toast.error("Session expired. Please login again.");
+        toast.error("Invalid email or password");
         localStorage.removeItem("token");
         window.location.href = "/login";
         break;
       case 403:
-        toast.error("You don't have permission to perform this action");
+        toast.error("Access denied. Only admin can perform this action");
         break;
       case 404:
         toast.error("Resource not found");
@@ -56,16 +80,9 @@ api.interceptors.response.use(
       default:
         toast.error(response.data?.message || "Something went wrong");
     }
-
+    
     return Promise.reject(error);
   }
 );
-
-// Retry failed requests configuration
-api.defaults.raxConfig = {
-  retry: 3,
-  retryDelay: 3000,
-  statusCodesToRetry: [[408, 429, 500, 502, 503, 504]],
-};
 
 export default api;

@@ -29,7 +29,7 @@ function App() {
         <Router>
           <ToastContainer
             position="top-right"
-            autoClose={3000}
+            autoClose={5000}
             hideProgressBar={false}
             newestOnTop
             closeOnClick
@@ -38,6 +38,7 @@ function App() {
             draggable
             pauseOnHover
             theme="light"
+            limit={3}
           />
           <Routes>
             <Route path="/login" element={<Login />} />

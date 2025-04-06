@@ -60,6 +60,9 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
+    console.log('Form data:', formData);
+    console.log('Form errors:', errors);
 
     // Validate all fields before submission
     const newErrors = {};
@@ -74,22 +77,54 @@ const Login = () => {
 
     if (!isFormValid()) {
       toast.error("Please fill in all fields");
+      console.log('Form validation failed');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await api.post("/auth/login", formData);
-      const { token } = response.data;
+      // Log the complete request configuration
+      console.log('API base URL:', api.defaults.baseURL);
+      console.log('Request payload:', formData);
+      
+      // Make the login request
+      const response = await api.post("/auth/login", {
+        email: formData.email,
+        password: formData.password
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response data:', response.data);
+      
+      // Store token and user data
+      const { token, _id, name, email, role } = response.data;
       localStorage.setItem("token", token);
+      localStorage.setItem("userData", JSON.stringify({
+        _id,
+        name,
+        email,
+        role
+      }));
+      
       toast.success("Welcome to Brookstone CRM!!");
       navigate("/");
     } catch (err) {
+      console.error('Error object:', err);
+      console.error('Error response:', err.response);
+      console.error('Error data:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      // Show specific error message from backend
+      const errorMessage = err.response?.data?.message || 
+        err.response?.status === 401 ? "Invalid email or password" :
+        err.response?.status === 403 ? "Access denied" :
+        "Login failed. Please check your credentials.";
+      
       setErrors((prev) => ({
         ...prev,
-        submit: "Invalid email or password",
+        submit: errorMessage,
       }));
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
