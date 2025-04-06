@@ -1,45 +1,65 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiSearch, FiEye } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditCpModal from "../components/EditCpModal";
-import DeleteLeadModal from "../components/DeleteLeadModal";
 
 const Agents = () => {
+  const navigate = useNavigate();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingAgent, setEditingAgent] = useState(null);
+  const [viewingAgent, setViewingAgent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const limit = 10;
 
+  const fetchUser = useCallback(async () => {
+    try {
+      const response = await api.get("/auth/me");
+      setCurrentUser(response.data);
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  }, []);
+
+  const fetchAgents = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get(
+        `/cp?page=${currentPage}&limit=${limit}&search=${searchQuery}`
+      );
+      setAgents(response.data.cps || []);
+      setTotalPages(response.data.totalPages || 1);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch agents");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to fetch agents. Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, limit, searchQuery]);
+
   useEffect(() => {
-    const fetchChannelPartners = async () => {
-      try {
-        const response = await api.get(
-          `/cp?page=${currentPage}&limit=${limit}`
-        );
-        setAgents(response.data.cps || []);
-        setTotalPages(response.data.totalPages || 1);
-        setLoading(false);
-      } catch (error) {
-        setError("Failed to fetch channel partners");
-        setLoading(false);
-        toast.error(
-          "Failed to fetch channel partners. Please try again later."
-        );
-        console.error(error);
-      }
-    };
+    fetchUser();
+  }, [fetchUser]);
 
-    fetchChannelPartners();
-  }, [currentPage]);
+  useEffect(() => {
+    if (currentUser) {
+      fetchAgents();
+    }
+  }, [fetchAgents, currentUser]);
 
-  const handleEdit = async (updatedData) => {
+  const handleEditAgent = async (updatedData) => {
     try {
       const response = await api.put(`/cp/${editingAgent._id}`, updatedData);
       setAgents(
@@ -48,26 +68,25 @@ const Agents = () => {
         )
       );
       setEditingAgent(null);
-      toast.success("Channel partner updated successfully");
-    } catch (error) {
-      toast.error("Failed to update channel partner");
-      console.error(error);
+      toast.success("Channel Partner updated successfully");
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to update channel partner"
+      );
+      console.error(err);
     }
   };
 
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-  };
-
-  const handleDelete = async (id) => {
+  const handleDeleteAgent = async (id) => {
     try {
       await api.delete(`/cp/${id}`);
       setAgents(agents.filter((agent) => agent._id !== id));
-      toast.success("Channel partner deleted successfully");
+      toast.success("Channel Partner deleted successfully");
       setDeleteConfirm(null);
-    } catch (error) {
-      toast.error("Failed to delete channel partner");
-      console.error(error);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to delete channel partner"
+      );
     }
   };
 
@@ -75,34 +94,39 @@ const Agents = () => {
     {
       header: "Name",
       accessor: "name",
+      render: (row) => <span>{row.name}</span>,
     },
     {
       header: "Phone",
       accessor: "phone",
+      render: (row) => <span>{row.phone}</span>,
     },
     {
       header: "Role",
       accessor: "role",
       render: (row) => (
         <span className="capitalize">
-          {row.role} {row.companyRole ? `(${row.companyRole})` : ''}
+          {row.role} {row.companyRole ? `(${row.companyRole})` : ""}
         </span>
       ),
     },
-    {
-      header: "Date",
-      accessor: "date",
-      render: (row) => (
-        <span>
-          {new Date(row.date).toLocaleDateString()}
-        </span>
-      ),
-    },
+    // {
+    //   header: "Date",
+    //   accessor: "date",
+    //   render: (row) => <span>{new Date(row.date).toLocaleDateString()}</span>,
+    // },
     {
       header: "Action",
-      accessor: "action",
+      accessor: "actions",
       render: (row) => (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex justify-center items-center gap-2">
+          {/* <button
+            onClick={() => setViewingAgent(row)}
+            className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+            title="View"
+          >
+            <FiEye className="w-4 h-4" />
+          </button> */}
           <button
             onClick={() => setEditingAgent(row)}
             className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
@@ -110,13 +134,13 @@ const Agents = () => {
           >
             <FiEdit2 size={18} />
           </button>
-          <button
+          {/* <button
             onClick={() => setDeleteConfirm(row._id)}
-            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+            className="p-1.5 text-red-600 hover:text-red-800"
             title="Delete"
           >
             <FiTrash2 size={18} />
-          </button>
+          </button> */}
         </div>
       ),
     },
@@ -124,10 +148,9 @@ const Agents = () => {
 
   const filteredAgents = agents.filter((agent) => {
     return (
-      agent.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.phone?.includes(searchQuery) ||
-      agent.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.companyRole?.toLowerCase().includes(searchQuery.toLowerCase())
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.phone.includes(searchQuery) ||
+      agent.role.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
@@ -141,22 +164,27 @@ const Agents = () => {
               <h1 className="text-2xl font-semibold text-gray-900">
                 Channel Partners
               </h1>
-              <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
-                <FiSearch className="w-5 h-5 text-gray-500" />
-              </button>
             </div>
-            <div className="relative flex-1 sm:max-w-md">
-              <FiSearch
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Search channel partners..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 sm:max-w-md">
+                <FiSearch
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder="Search channel partners..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+              </div>
+              <button
+                onClick={() => navigate("/cp/add")}
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                Add Channel Partner
+              </button>
             </div>
           </div>
 
@@ -185,7 +213,7 @@ const Agents = () => {
                   </p>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handlePageChange(currentPage - 1)}
+                      onClick={() => setCurrentPage(currentPage - 1)}
                       disabled={currentPage === 1}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         currentPage === 1
@@ -196,7 +224,7 @@ const Agents = () => {
                       Previous
                     </button>
                     <button
-                      onClick={() => handlePageChange(currentPage + 1)}
+                      onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage >= totalPages}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         currentPage >= totalPages
@@ -218,14 +246,22 @@ const Agents = () => {
         <EditCpModal
           cp={editingAgent}
           onClose={() => setEditingAgent(null)}
-          onSave={handleEdit}
+          onSave={handleEditAgent}
         />
       )}
 
       {deleteConfirm && (
         <DeleteLeadModal
           onClose={() => setDeleteConfirm(null)}
-          onDelete={() => handleDelete(deleteConfirm)}
+          onDelete={() => handleDeleteAgent(deleteConfirm)}
+        />
+      )}
+
+      {viewingAgent && (
+        <ViewLeadModal
+          lead={viewingAgent}
+          onClose={() => setViewingAgent(null)}
+          onRefresh={fetchAgents}
         />
       )}
     </div>

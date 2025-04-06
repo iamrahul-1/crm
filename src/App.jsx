@@ -7,7 +7,8 @@ import Navigation from "./components/Navigation";
 import PieChart from "./components/dashboard";
 import Profile from "./pages/Profile";
 import Setting from "./pages/Setting";
-import AddLeads from "./pages/AddLeads";
+import AddLeads from "./components/AddLeads";
+import AddAgent from "./components/AddAgent";
 import Leads from "./pages/Leads";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -16,7 +17,7 @@ import NewLeads from "./pages/NewLeads";
 import RejectedLeads from "./pages/RejectedLeads";
 import MissedLeads from "./pages/missed";
 import FavoriteLeads from "./pages/fav";
-import Agents from "./pages/agents";
+import Agents from "./pages/Cp";
 import UnderDevelopment from "./components/UnderDevelopment";
 import LeadPotential from "./pages/LeadPotential";
 import LeadStatus from "./pages/LeadStatus";
@@ -65,6 +66,7 @@ function App() {
                         path="/leads/rejected"
                         element={<RejectedLeads />}
                       />
+                      <Route path="/cp/add" element={<AddAgent />} />
 
                       {/* Lead Potential Routes */}
                       <Route
