@@ -33,7 +33,7 @@ const leadDropdownLinks = [
     path: "/leads/status",
     label: "Lead Status",
     subLinks: [
-      { id: "stat1", path: "/leads/status/opened", label: "Opened" },
+      { id: "stat1", path: "/leads/status/open", label: "Opened" },
       { id: "stat2", path: "/leads/status/in-progress", label: "In Progress" },
       {
         id: "stat3",

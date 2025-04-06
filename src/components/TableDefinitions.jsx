@@ -4,7 +4,7 @@ import { AiFillHeart } from "react-icons/ai";
 export const getLeadTableColumns = ({
   handleViewLead,
   setEditingLead,
-  setDeleteConfirm,
+  // setDeleteConfirm,
   toggleFavorite,
 }) => [
   {
@@ -51,13 +51,13 @@ export const getLeadTableColumns = ({
         >
           <FiEdit2 size={18} />
         </button>
-        <button
+        {/* <button
           onClick={() => setDeleteConfirm(row._id)}
           className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
           title="Delete"
         >
           <FiTrash2 size={18} />
-        </button>
+        </button> */}
         <button
           onClick={() => toggleFavorite(row._id, row)}
           className="p-1.5 rounded-lg transition-colors"

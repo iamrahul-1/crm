@@ -7,25 +7,21 @@ import EditLeadModal from "./EditLeadModal";
 import DeleteLeadModal from "./DeleteLeadModal";
 import ViewLeadModal from "./ViewLeadModal";
 import { getLeadTableColumns } from "./TableDefinitions";
+import PropTypes from "prop-types";
 
 const LeadList = ({
   title,
-  endpoint,
+  leads = [],
+  loading = false,
   params = {},
   filterFn = (lead) => true,
 }) => {
   const navigate = useNavigate();
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [editingLead, setEditingLead] = useState(null);
   const [viewingLead, setViewingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const limit = 10;
 
   const fetchUser = useCallback(async () => {
     try {
@@ -36,62 +32,13 @@ const LeadList = ({
     }
   }, []);
 
-  const fetchLeads = useCallback(async () => {
-    try {
-      const response = await api.get(
-        `${endpoint}?page=${currentPage}&limit=${limit}&search=${searchQuery}&${Object.entries(
-          params
-        )
-          .map(([key, value]) => `${key}=${value}`)
-          .join("&")}`
-      );
-      const updatedLeads = response.data.leads.map((lead) => ({
-        ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
-      }));
-      setLeads(updatedLeads);
-      setTotalPages(response.data.totalPages || 1);
-      setLoading(false);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch leads");
-      setLoading(false);
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to fetch leads. Please try again later."
-      );
-    }
-  }, [currentPage, limit, searchQuery, params, currentUser]);
-
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchLeads();
-    }
-  }, [fetchLeads, currentUser]);
-
-  const refreshLeads = () => {
-    fetchLeads();
-  };
-
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-
-      const updatedLeads = leads.map((lead) => {
-        if (lead._id === editingLead._id) {
-          return {
-            ...lead,
-            ...response.data.lead,
-            createdBy: lead.createdBy,
-          };
-        }
-        return lead;
-      });
-
-      setLeads(updatedLeads);
       setEditingLead(null);
       toast.success("Lead updated successfully");
     } catch (err) {
@@ -101,7 +48,7 @@ const LeadList = ({
   };
 
   const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
+    // No-op since pagination is handled by parent
   };
 
   const handleViewLead = (row) => {
@@ -112,19 +59,6 @@ const LeadList = ({
     try {
       const isFavorite = !lead.favourite;
       const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
-
-      const updatedLeads = leads.map((l) => {
-        if (l._id === id) {
-          return {
-            ...l,
-            ...response.data.lead,
-            createdBy: l.createdBy,
-          };
-        }
-        return l;
-      });
-
-      setLeads(updatedLeads);
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
         type: isFavorite ? "success" : "info",
@@ -141,9 +75,8 @@ const LeadList = ({
   const handleDelete = async (id) => {
     try {
       await api.delete(`/leads/${id}`);
-      setLeads(leads.filter((lead) => lead._id !== id));
-      toast.success("Lead deleted successfully");
       setDeleteConfirm(null);
+      toast.success("Lead deleted successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to delete lead");
     }
@@ -179,7 +112,7 @@ const LeadList = ({
               <div className="relative flex-1 sm:max-w-md">
                 <input
                   type="text"
-                  placeholder={`Search ${title?.toLowerCase() || "leads"}...`}
+                  placeholder={`Search ${title.toLowerCase()}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -200,80 +133,24 @@ const LeadList = ({
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
-            ) : error ? (
-              <div className="flex items-center justify-center h-64 text-red-500">
-                {error}
-              </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table columns={columns} data={filteredLeads} />
               </div>
             )}
-
-            {/* Pagination */}
-            {!loading && !error && (
-              <div className="px-6 py-4 border-t border-gray-100">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm text-gray-500">
-                    Showing page {currentPage} of {totalPages}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage >= totalPages}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage >= totalPages
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
-
-      {editingLead && (
-        <EditLeadModal
-          lead={editingLead}
-          onClose={() => setEditingLead(null)}
-          onSave={handleEdit}
-        />
-      )}
-
-      {deleteConfirm && (
-        <DeleteLeadModal
-          onClose={() => setDeleteConfirm(null)}
-          onDelete={() => handleDelete(deleteConfirm)}
-        />
-      )}
-
-      {viewingLead && (
-        <ViewLeadModal
-          lead={viewingLead}
-          onClose={() => {
-            setViewingLead(null);
-          }}
-          onRefresh={refreshLeads}
-        />
-      )}
     </div>
   );
+};
+
+LeadList.propTypes = {
+  title: PropTypes.string.isRequired,
+  leads: PropTypes.arrayOf(PropTypes.object).isRequired,
+  loading: PropTypes.bool.isRequired,
+  params: PropTypes.object,
+  filterFn: PropTypes.func,
 };
 
 export default LeadList;

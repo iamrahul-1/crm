@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import PropTypes from 'prop-types';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -202,8 +203,17 @@ const Dashboard = () => {
     </div>
   );
 
-  const LeadTypeCard = ({ icon: Icon, color, label, value }) => (
-    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+  const LeadTypeCard = ({
+    icon: Icon,
+    color,
+    label,
+    value,
+    onClick = () => {},
+  }) => (
+    <div 
+      className="flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+      onClick={onClick}
+    >
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg ${color}`}>
           <Icon className="h-4 w-4 text-white" />
@@ -217,6 +227,14 @@ const Dashboard = () => {
       </div>
     </div>
   );
+
+  LeadTypeCard.propTypes = {
+    icon: PropTypes.elementType.isRequired,
+    color: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    value: PropTypes.number.isRequired,
+    onClick: PropTypes.func,
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -261,7 +279,7 @@ const Dashboard = () => {
                     <FiUsers className="w-5 h-5 text-green-600" />
                   </div>
                   <h2 className="text-base font-medium text-gray-800">
-                    Lead Stages
+                    Lead Potential
                   </h2>
                 </div>
                 <div className="pt-8">
@@ -270,18 +288,21 @@ const Dashboard = () => {
                     color="bg-red-500"
                     label="Hot Lead"
                     value={leadCounts.rejected}
+                    onClick={() => navigate("/leads/potential/hot")}
                   />
                   <LeadTypeCard
                     icon={FiSun}
                     color="bg-orange-500"
                     label="Warm Lead"
                     value={leadCounts.favourite}
+                    onClick={() => navigate("/leads/potential/warm")}
                   />
                   <LeadTypeCard
                     icon={FiCloud}
                     color="bg-blue-500"
                     label="Cold Lead"
                     value={leadCounts.siteVisited}
+                    onClick={() => navigate("/leads/potential/cold")}
                   />
                 </div>
               </div>
