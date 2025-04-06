@@ -1,9 +1,40 @@
-import React, { useState } from "react";
-import { FiX, FiUser, FiPhone, FiCalendar } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { FiX, FiUser, FiPhone, FiCalendar, FiSearch } from "react-icons/fi";
 import PropTypes from "prop-types";
 import LoadingButton from "./LoadingButton";
+import { toast } from "react-toastify";
+import api from "../services/api";
 
 const EditLeadModal = ({ lead, onClose, onSave }) => {
+  // Add these state variables at the top with other states
+  const [cpOptions, setCpOptions] = useState([]);
+  const [loadingCps, setLoadingCps] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Add this useEffect after other state declarations
+  useEffect(() => {
+    const fetchCps = async () => {
+      setLoadingCps(true);
+      try {
+        const response = await api.get("/cp");
+        const cpData = response.data.cps;
+        const options = cpData.map((cp) => ({
+          value: cp._id,
+          label: `${cp.name} - ${cp.phone}`,
+        }));
+        setCpOptions(options);
+      } catch (error) {
+        console.error("Error fetching CPs:", error);
+        toast.error("Failed to fetch channel partners");
+      } finally {
+        setLoadingCps(false);
+      }
+    };
+
+    fetchCps();
+  }, []);
+
+  // Update formData initialization
   const [formData, setFormData] = useState({
     name: lead.name,
     phone: lead.phone,
@@ -11,14 +42,18 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     requirement: lead.requirement,
     budget: lead.budget,
     source: lead.source,
-    date: lead.date || (() => {
-      const date = new Date();
-      date.setDate(date.getDate() + 2);
-      return date.toISOString().split("T")[0];
-    })(),
+    date:
+      lead.date ||
+      (() => {
+        const date = new Date();
+        date.setDate(date.getDate() + 2);
+        return date.toISOString().split("T")[0];
+      })(),
     favourite: lead.favourite || false,
     autostatus: lead.autostatus || "new",
     schedule: lead.schedule,
+    associatedCp: lead.associatedCp || "",
+    referenceName: lead.referenceName || "",
   });
 
   const [errors, setErrors] = useState({});
@@ -249,6 +284,113 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
                   <option value="reference">Reference</option>
                 </select>
               </div>
+
+              {/* Reference Name - Conditional */}
+              {formData.source === "reference" && (
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Reference Name
+                  </label>
+                  <input
+                    type="text"
+                    name="referenceName"
+                    value={formData.referenceName}
+                    onChange={handleChange}
+                    placeholder="Enter reference name"
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                  />
+                </div>
+              )}
+
+              {/* Associated CP - Conditional */}
+              {formData.source === "cp" && (
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Associated Channel Partner
+                  </label>
+                  <div className="relative">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      value={
+                        formData.associatedCp && !searchQuery
+                          ? cpOptions
+                              .find((cp) => cp.value === formData.associatedCp)
+                              ?.label.split(" - ")[0]
+                          : searchQuery
+                      }
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        if (formData.associatedCp) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            associatedCp: "",
+                          }));
+                        }
+                      }}
+                      placeholder="Search channel partner..."
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                    />
+                    {searchQuery && (
+                      <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                        {loadingCps ? (
+                          <div className="p-3 text-center text-gray-500">
+                            Loading...
+                          </div>
+                        ) : (
+                          cpOptions
+                            .filter((cp) =>
+                              cp.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase())
+                            )
+                            .map((cp) => (
+                              <div
+                                key={cp.value}
+                                className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    associatedCp: cp.value,
+                                  }));
+                                  setSearchQuery(cp.label.split(" - ")[0]);
+                                  setSearchQuery("");
+                                }}
+                              >
+                                {cp.label.split(" - ")[0]}
+                              </div>
+                            ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {formData.associatedCp && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                      <span>Selected:</span>
+                      <span className="font-medium">
+                        {
+                          cpOptions
+                            .find((cp) => cp.value === formData.associatedCp)
+                            ?.label.split(" - ")[0]
+                        }
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            associatedCp: "",
+                          }));
+                          setSearchQuery("");
+                        }}
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -289,6 +431,8 @@ EditLeadModal.propTypes = {
     favourite: PropTypes.bool,
     autostatus: PropTypes.string,
     schedule: PropTypes.string,
+    referenceName: PropTypes.string,
+    associatedCp: PropTypes.string,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,

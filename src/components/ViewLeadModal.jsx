@@ -102,8 +102,7 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
-    const hasStatusChanges =
-      formData.status !== lead.status;
+    const hasStatusChanges = formData.status !== lead.status;
     setHasChanges(hasStatusChanges || formData.remarks !== lead.remarks);
   };
 
@@ -252,13 +251,22 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Reminder
               </label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <input
+                  type="time"
+                  name="schedule"
+                  value={formData.schedule || ""}
+                  onChange={handleChange}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
 

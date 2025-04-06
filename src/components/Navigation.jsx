@@ -42,6 +42,7 @@ const leadDropdownLinks = [
       },
       { id: "stat4", path: "/leads/status/visited", label: "Site Visited" },
       { id: "stat5", path: "/leads/status/closed", label: "Closed" },
+      { id: "stat6", path: "/leads/rejected", label: "Rejected Leads" },
     ],
   },
   {
@@ -55,7 +56,6 @@ const leadDropdownLinks = [
       { id: "sch3", path: "/leads/schedule/custom", label: "Custom" },
     ],
   },
-  { id: 8, path: "/leads/rejected", label: "Rejected Leads" },
 ];
 
 function Navigation({ isOpen, toggleMenu }) {
