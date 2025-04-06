@@ -1,23 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "./../assets/logo.png";
-import api from "../services/api";
-import { toast } from "react-toastify";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import axios from "axios";
+import { toast } from "react-toastify";
 
-const Login = () => {
+const Login2 = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     submit: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,11 +24,9 @@ const Login = () => {
       case "email":
         if (!value) return "Email is required";
         return "";
-
       case "password":
         if (!value) return "Password is required";
         return "";
-
       default:
         return "";
     }
@@ -60,66 +56,73 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submission started');
-    console.log('Form data:', formData);
-    console.log('Form errors:', errors);
 
-    // Validate all fields before submission
-    const newErrors = {};
-    Object.keys(formData).forEach((key) => {
-      newErrors[key] = validateField(key, formData[key]);
-    });
+    // Validate all fields
+    const newErrors = {
+      email: validateField("email", formData.email),
+      password: validateField("password", formData.password),
+    };
 
-    setErrors((prev) => ({
-      ...prev,
-      ...newErrors,
-    }));
+    setErrors(newErrors);
 
     if (!isFormValid()) {
       toast.error("Please fill in all fields");
-      console.log('Form validation failed');
       return;
     }
 
     setIsLoading(true);
     try {
-      // Log the complete request configuration
-      console.log('API base URL:', api.defaults.baseURL);
-      console.log('Request payload:', formData);
-      
-      // Make the login request
-      const response = await api.post("/auth/login", {
-        email: formData.email,
-        password: formData.password
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response data:', response.data);
-      
+      // Make the login request directly using axios
+      const response = await axios.post(
+        "https://brookstone-backend.vercel.app/api/auth/login",
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+          timeout: 15000,
+        }
+      );
+
       // Store token and user data
       const { token, _id, name, email, role } = response.data;
       localStorage.setItem("token", token);
-      localStorage.setItem("userData", JSON.stringify({
-        _id,
-        name,
-        email,
-        role
-      }));
-      
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          _id,
+          name,
+          email,
+          role,
+        })
+      );
+
       toast.success("Welcome to Brookstone CRM!!");
       navigate("/");
-    } catch (err) {
-      console.error('Error object:', err);
-      console.error('Error response:', err.response);
-      console.error('Error data:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      
-      // Show specific error message from backend
-      const errorMessage = err.response?.data?.message || 
-        err.response?.status === 401 ? "Invalid email or password" :
-        err.response?.status === 403 ? "Access denied" :
-        "Login failed. Please check your credentials.";
-      
+    } catch (error) {
+      console.error("Login error:", error);
+
+      // Handle different error cases
+      let errorMessage = "Login failed. Please try again.";
+      if (error.response) {
+        errorMessage =
+          error.response.data?.message || error.response.status === 401
+            ? "Invalid email or password"
+            : error.response.status === 403
+            ? "Access denied"
+            : "Login failed. Please check your credentials.";
+      } else if (error.request) {
+        errorMessage =
+          "No response from server. Please check your internet connection.";
+      } else {
+        errorMessage = "Error occurred. Please try again.";
+      }
+
       setErrors((prev) => ({
         ...prev,
         submit: errorMessage,
@@ -245,33 +248,35 @@ const Login = () => {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiLock className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`appearance-none block w-full pl-10 pr-10 py-2.5 border ${
-                      errors.password ? "border-red-300" : "border-gray-300"
-                    } rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                      errors.password
-                        ? "focus:ring-red-500"
-                        : "focus:ring-blue-500"
-                    } focus:border-transparent transition-all`}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`appearance-none block w-full pl-10 pr-10 py-2.5 border ${
+                        errors.password ? "border-red-300" : "border-gray-300"
+                      } rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                        errors.password
+                          ? "focus:ring-red-500"
+                          : "focus:ring-blue-500"
+                      } focus:border-transparent transition-all`}
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      {showPassword ? (
+                        <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      ) : (
+                        <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -364,4 +369,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login2;

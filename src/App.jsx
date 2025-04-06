@@ -10,7 +10,7 @@ import Setting from "./pages/Setting";
 import AddLeads from "./components/AddLeads";
 import AddAgent from "./components/AddAgent";
 import Leads from "./pages/Leads";
-import Login from "./pages/Login";
+import Login2 from "./pages/Login2";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NewLeads from "./pages/NewLeads";
@@ -41,7 +41,7 @@ function App() {
             limit={3}
           />
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login2 />} />
             <Route path="/register" element={<Register />} />
             <Route
               path="/*"

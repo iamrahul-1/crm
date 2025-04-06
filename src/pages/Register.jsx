@@ -11,31 +11,27 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    role: "agent",
+    role: "manager", 
   });
   
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
     submit: "",
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Validation patterns
   const patterns = {
-    name: /^[a-zA-Z\s]{3,30}$/,
-    email: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
+    name: /^[a-zA-Z\s]{3,30}$/, 
+    email: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/, 
     password: {
       minLength: 8,
       hasUpperCase: /[A-Z]/,
       hasLowerCase: /[a-z]/,
       hasNumber: /[0-9]/,
-      hasSpecialChar: /[!@#$%^&*]/,
     },
   };
 
@@ -57,12 +53,6 @@ const Register = () => {
         if (!patterns.password.hasUpperCase.test(value)) return "Password must contain at least one uppercase letter";
         if (!patterns.password.hasLowerCase.test(value)) return "Password must contain at least one lowercase letter";
         if (!patterns.password.hasNumber.test(value)) return "Password must contain at least one number";
-        if (!patterns.password.hasSpecialChar.test(value)) return "Password must contain at least one special character";
-        return "";
-      
-      case "confirmPassword":
-        if (!value) return "Please confirm your password";
-        if (value !== formData.password) return "Passwords do not match";
         return "";
 
       default:
@@ -75,7 +65,6 @@ const Register = () => {
       { regex: patterns.password.hasUpperCase, label: "One uppercase letter" },
       { regex: patterns.password.hasLowerCase, label: "One lowercase letter" },
       { regex: patterns.password.hasNumber, label: "One number" },
-      { regex: patterns.password.hasSpecialChar, label: "One special character" },
       { regex: new RegExp(`.{${patterns.password.minLength},}`), label: "8+ characters" },
     ];
 
@@ -99,52 +88,40 @@ const Register = () => {
     }));
   };
 
-  const isFormValid = () => {
-    return !Object.values(errors).some(error => error) && 
-           Object.keys(formData).every(key => formData[key]);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate all fields before submission
+    let isValid = true;
     const newErrors = {};
-    Object.keys(formData).forEach(key => {
-      if (key !== "role") {
-        newErrors[key] = validateField(key, formData[key]);
-      }
+    
+    Object.keys(formData).forEach(field => {
+      const error = validateField(field, formData[field]);
+      newErrors[field] = error;
+      if (error) isValid = false;
     });
     
-    setErrors(prev => ({
-      ...prev,
-      ...newErrors,
-    }));
+    setErrors(newErrors);
     
-    if (!isFormValid()) {
-      toast.error("Please fix all errors before submitting");
-      return;
-    }
+    if (!isValid) return;
 
-    setIsLoading(true);
     try {
-      const response = await api.post("/auth/register", formData);
-      const { token } = response.data;
-      localStorage.setItem("token", token);
-      toast.success("Registration successful! Welcome to Shatranj CRM");
-      navigate("/");
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || "Registration failed. Please try again.";
-      setErrors(prev => ({
-        ...prev,
-        submit: errorMessage,
-      }));
-      toast.error(errorMessage);
+      setIsLoading(true);
+      const response = await api.post("/auth/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+      
+      toast.success("Registration successful! Please login.");
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error(error.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  const passwordStrength = checkPasswordStrength(formData.password);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -275,7 +252,7 @@ const Register = () => {
                 
                 {/* Password strength indicators */}
                 <div className="mt-2 space-y-2">
-                  {passwordStrength.map((check, index) => (
+                  {checkPasswordStrength(formData.password).map((check, index) => (
                     <div key={index} className="flex items-center text-sm">
                       {check.isValid ? (
                         <FiCheck className="h-4 w-4 text-green-500 mr-2" />
@@ -288,45 +265,6 @@ const Register = () => {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
-                </label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className={`appearance-none block w-full pl-10 pr-10 py-2.5 border ${
-                      errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                    } rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                      errors.confirmPassword ? 'focus:ring-red-500' : 'focus:ring-blue-500'
-                    } focus:border-transparent transition-all`}
-                    placeholder="Re-enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-                )}
               </div>
 
               <div>
@@ -344,8 +282,8 @@ const Register = () => {
                     onChange={handleChange}
                     className="appearance-none block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
-                    <option value="agent">Channel Partner</option>
                     <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,20 +294,22 @@ const Register = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading || !isFormValid()}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                "Create Account"
-              )}
-            </button>
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+            </div>
 
             <p className="text-xs text-center text-gray-600">
               By registering, you agree to our{" "}
