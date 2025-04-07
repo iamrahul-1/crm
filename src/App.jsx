@@ -34,7 +34,7 @@ function App() {
         <Router>
           <ToastContainer
             position="top-right"
-            autoClose={3000}
+            autoClose={5000}
             hideProgressBar={false}
             newestOnTop
             closeOnClick
@@ -43,9 +43,10 @@ function App() {
             draggable
             pauseOnHover
             theme="light"
+            limit={3}
           />
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login2 />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route
@@ -135,7 +136,10 @@ function App() {
                         path="/leads/schedule/weekend"
                         element={<WeekendScheduled schedule="weekend" />}
                       />
-                      <Route path="/leads/schedule/custom" element={<CustomScheduled schedule="custom" />} />
+                      <Route
+                        path="/leads/schedule/custom"
+                        element={<CustomScheduled schedule="custom" />}
+                      />
                     </Routes>
                   </>
                 </ProtectedRoute>

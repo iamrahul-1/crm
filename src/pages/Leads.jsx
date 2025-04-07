@@ -39,7 +39,7 @@ const Leads = () => {
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -48,7 +48,8 @@ const Leads = () => {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
       toast.error(
-        err.response?.data?.message || "Failed to fetch leads. Please try again later."
+        err.response?.data?.message ||
+          "Failed to fetch leads. Please try again later."
       );
     }
   }, [currentPage, limit, searchQuery, currentUser]);
@@ -70,14 +71,14 @@ const Leads = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
+
       // Find the lead in the current state and update it
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy // Preserve the createdBy field
+            createdBy: lead.createdBy, // Preserve the createdBy field
           };
         }
         return lead;
@@ -102,7 +103,7 @@ const Leads = () => {
 
   const toggleFavorite = (id, lead) => {
     const isFavorite = !lead.favourite;
-    
+
     // Only update UI state
     const updatedLeads = leads.map((l) => {
       if (l._id === id) {
@@ -143,10 +144,10 @@ const Leads = () => {
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      (lead.name?.toLowerCase() || '').includes(searchLower) ||
-      String(lead.phone || '').includes(searchQuery) ||
-      (lead.purpose?.toLowerCase() || '').includes(searchLower) ||
-      (lead.remarks?.toLowerCase() || '').includes(searchLower)
+      (lead.name?.toLowerCase() || "").includes(searchLower) ||
+      String(lead.phone || "").includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || "").includes(searchLower)
     );
   });
 
