@@ -11,7 +11,7 @@ import AddLeads from "./components/AddLeads";
 import AddAgent from "./components/AddAgent";
 import Leads from "./pages/Leads";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NewLeads from "./pages/NewLeads";
 import RejectedLeads from "./pages/RejectedLeads";
@@ -21,6 +21,11 @@ import Agents from "./pages/Cp";
 import UnderDevelopment from "./components/UnderDevelopment";
 import LeadPotential from "./pages/LeadPotential";
 import LeadStatus from "./pages/LeadStatus";
+import Register from "./pages/Register";
+import TodayScheduled from "./pages/TodayScheduled";
+import WeekendScheduled from "./pages/WeekendScheduled";
+import TomorrowScheduled from "./pages/TomorrowScheduled";
+import CustomScheduled from "./pages/CustomScheduled";
 
 function App() {
   return (
@@ -42,6 +47,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route
               path="/*"
               element={
@@ -119,16 +125,17 @@ function App() {
                       {/* Schedule Visits Routes */}
                       <Route
                         path="/leads/schedule/today"
-                        element={<UnderDevelopment />}
+                        element={<TodayScheduled schedule="today" />}
                       />
                       <Route
                         path="/leads/schedule/tomorrow"
-                        element={<UnderDevelopment />}
+                        element={<TomorrowScheduled schedule="tomorrow" />}
                       />
                       <Route
                         path="/leads/schedule/weekend"
-                        element={<UnderDevelopment />}
+                        element={<WeekendScheduled schedule="weekend" />}
                       />
+                      <Route path="/leads/schedule/custom" element={<CustomScheduled schedule="custom" />} />
                     </Routes>
                   </>
                 </ProtectedRoute>
