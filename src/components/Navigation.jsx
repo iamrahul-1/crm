@@ -53,7 +53,7 @@ const leadDropdownLinks = [
       { id: "sch1", path: "/leads/schedule/today", label: "Today" },
       { id: "sch2", path: "/leads/schedule/tomorrow", label: "Tomorrow" },
       { id: "sch3", path: "/leads/schedule/weekend", label: "Weekend" },
-      { id: "sch3", path: "/leads/schedule/custom", label: "Custom" },
+      { id: "sch4", path: "/leads/schedule/custom", label: "Custom" },
     ],
   },
 ];

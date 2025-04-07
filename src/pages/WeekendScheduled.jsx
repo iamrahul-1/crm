@@ -36,6 +36,7 @@ const WeekendScheduled = () => {
       const response = await api.get(
         `/leads/schedule/weekend?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
+      console.log("Weekend's leads:",response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
         createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name

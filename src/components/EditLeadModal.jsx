@@ -17,15 +17,16 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
       setLoadingCps(true);
       try {
         const response = await api.get("/cp");
-        const cpData = response.data.cps;
-        const options = cpData.map((cp) => ({
+        const cpData = response.data?.data || [];
+        const options = Array.isArray(cpData) ? cpData.map((cp) => ({
           value: cp._id,
           label: `${cp.name} - ${cp.phone}`,
-        }));
+        })) : [];
         setCpOptions(options);
       } catch (error) {
         console.error("Error fetching CPs:", error);
         toast.error("Failed to fetch channel partners");
+        setCpOptions([]); // Set empty array on error
       } finally {
         setLoadingCps(false);
       }
@@ -34,21 +35,25 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
     fetchCps();
   }, []);
 
+  // Helper function to format date in IST
+  const formatDateToIST = (date) => {
+    const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000)); // Add 5:30 hours for IST
+    return istDate.toISOString().split('T')[0];
+  };
+
   // Update formData initialization
   const [formData, setFormData] = useState({
-    name: lead.name,
-    phone: lead.phone,
-    purpose: lead.purpose,
-    requirement: lead.requirement,
-    budget: lead.budget,
-    source: lead.source,
-    date:
-      lead.date ||
-      (() => {
-        const date = new Date();
-        date.setDate(date.getDate() + 2);
-        return date.toISOString().split("T")[0];
-      })(),
+    name: lead.name || '',
+    phone: lead.phone || '',
+    purpose: lead.purpose || '',
+    requirement: lead.requirement || '',
+    budget: lead.budget || '',
+    source: lead.source || '',
+    date: lead.date ? formatDateToIST(new Date(lead.date)) : (() => {
+      const date = new Date();
+      date.setDate(date.getDate() + 2);
+      return formatDateToIST(date);
+    })(),
     favourite: lead.favourite || false,
     autostatus: lead.autostatus || "new",
     schedule: lead.schedule,

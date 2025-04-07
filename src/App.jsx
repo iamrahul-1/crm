@@ -4,7 +4,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
-import PieChart from "./components/Dashboard";
+import PieChart from "./components/dashboard";
 import Profile from "./pages/Profile";
 import Setting from "./pages/Setting";
 import AddLeads from "./components/AddLeads";
@@ -135,10 +135,7 @@ function App() {
                         path="/leads/schedule/weekend"
                         element={<WeekendScheduled schedule="weekend" />}
                       />
-                      <Route
-                        path="/leads/schedule/custom"
-                        element={<CustomScheduled schedule="custom" />}
-                      />
+                      <Route path="/leads/schedule/custom" element={<CustomScheduled schedule="custom" />} />
                     </Routes>
                   </>
                 </ProtectedRoute>

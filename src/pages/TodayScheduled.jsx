@@ -36,6 +36,7 @@ const TodayScheduled = () => {
       const response = await api.get(
         `/leads/schedule/today?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
+      console.log("Today's leads:", response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
         createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name

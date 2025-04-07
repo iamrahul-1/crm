@@ -26,7 +26,7 @@ const Leads = () => {
     try {
       const response = await api.get("/auth/me");
       setCurrentUser(response.data);
-      console.log(response.data);
+      
     } catch (err) {
       console.error("Failed to fetch user:", err);
     }
@@ -37,6 +37,7 @@ const Leads = () => {
       const response = await api.get(
         `/leads?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
+      console.log(response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
         createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
