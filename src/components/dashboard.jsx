@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
+import LoadingButton from "./LoadingButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -306,8 +307,10 @@ const Dashboard = () => {
           </h1>
 
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex items-center justify-center min-h-[400px]">
+              <LoadingButton isLoading={true} className="w-auto">
+                Loading...
+              </LoadingButton>
             </div>
           ) : (
             <div className="grid gap-6">

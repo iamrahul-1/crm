@@ -20,6 +20,14 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
+
+  // Fixed email suggestions
+  const emailSuggestions = [
+    "shyammodi0609@gmail.com",
+    "naishalparikh77@gmail.com",
+    "nileshtiwari300@gmail.com"
+  ];
 
   const validateField = (name, value) => {
     switch (name) {
@@ -43,13 +51,29 @@ const Login = () => {
       [name]: value,
     }));
 
+    if (name === 'email') {
+      setShowEmailSuggestions(true);
+    }
+
     const error = validateField(name, value);
     setErrors((prev) => ({
       ...prev,
       [name]: error,
-      submit: "", // Clear submit error when user types
+      submit: "",
     }));
   };
+
+  const handleEmailSuggestionClick = (email) => {
+    setFormData(prev => ({
+      ...prev,
+      email
+    }));
+    setShowEmailSuggestions(false);
+  };
+
+  const filteredSuggestions = emailSuggestions.filter(email => 
+    email.toLowerCase().includes(formData.email.toLowerCase())
+  );
 
   const isFormValid = () => {
     return (
@@ -77,19 +101,41 @@ const Login = () => {
       return;
     }
 
+   
+
     setIsLoading(true);
     try {
       const response = await api.post("/auth/login", formData);
+     
+      
       const { token } = response.data;
+      
+      // Add a delay before redirecting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       localStorage.setItem("token", token);
       toast.success("Welcome to Brookstone CRM!!");
+      
+      // Add a small delay after setting token
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       navigate("/");
     } catch (err) {
+      console.log("Login Error Details:", {
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data,
+        error: err.message
+      });
+      const errorMessage = err.response?.data?.message || "Invalid email or password";
       setErrors((prev) => ({
         ...prev,
-        submit: "Invalid email or password",
+        submit: errorMessage,
       }));
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(errorMessage);
+      
+      // Add a delay for error state
+      await new Promise(resolve => setTimeout(resolve, 1000));
     } finally {
       setIsLoading(false);
     }
@@ -135,12 +181,12 @@ const Login = () => {
               Sign in to your account
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Or{" "}
+              Forgot your password?{" "}
               <Link
-                to="/register"
+                to="/forgot-password"
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
               >
-                create a new account
+                Reset it here
               </Link>
             </p>
           </div>
@@ -184,6 +230,7 @@ const Login = () => {
                     required
                     value={formData.email}
                     onChange={handleChange}
+                    onFocus={() => setShowEmailSuggestions(true)}
                     className={`appearance-none block w-full pl-10 pr-3 py-2.5 border ${
                       errors.email ? "border-red-300" : "border-gray-300"
                     } rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 ${
@@ -193,6 +240,20 @@ const Login = () => {
                     } focus:border-transparent transition-all`}
                     placeholder="you@example.com"
                   />
+                  {showEmailSuggestions && filteredSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                      {filteredSuggestions.map((email) => (
+                        <div
+                          key={email}
+                          onClick={() => handleEmailSuggestionClick(email)}
+                          className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-gray-700 text-sm flex items-center"
+                        >
+                          <FiMail className="h-4 w-4 mr-2 text-gray-400" />
+                          {email}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -309,17 +370,17 @@ const Login = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-gray-50 text-gray-500">
-                  New to Shatranj CRM?
+                  Having trouble signing in?
                 </span>
               </div>
             </div>
 
             <div className="mt-6">
               <Link
-                to="/register"
+                to="/forgot-password"
                 className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
               >
-                Create new account
+                Reset Password
               </Link>
             </div>
           </div>
