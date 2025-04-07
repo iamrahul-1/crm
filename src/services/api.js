@@ -30,7 +30,7 @@ api.interceptors.request.use(
 // Response Interceptor
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const { response } = error;
     
     if (!response) {
@@ -38,11 +38,18 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Don't show session expired for login endpoint
+    const isLoginRequest = response.config.url.includes('/auth/login');
+
     switch (response.status) {
       case 401:
-        toast.error("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        window.location.href = "/login";
+        if (!isLoginRequest) {
+          toast.error("Session expired. Please login again.");
+          localStorage.removeItem("token");
+          // Add delay before redirect
+          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+          window.location.href = "/login";
+        }
         break;
       case 403:
         toast.error("You don't have permission to perform this action");

@@ -8,7 +8,7 @@ import DeleteLeadModal from "../components/DeleteLeadModal";
 import ViewLeadModal from "../components/ViewLeadModal";
 import { getLeadTableColumns } from "../components/TableDefinitions";
 
-const Leads = () => {
+const TodayScheduled = () => {
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,6 @@ const Leads = () => {
     try {
       const response = await api.get("/auth/me");
       setCurrentUser(response.data);
-      console.log(response.data);
     } catch (err) {
       console.error("Failed to fetch user:", err);
     }
@@ -35,11 +34,11 @@ const Leads = () => {
   const fetchLeads = useCallback(async () => {
     try {
       const response = await api.get(
-        `/leads?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/schedule/today?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -71,13 +70,12 @@ const Leads = () => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
       
-      // Find the lead in the current state and update it
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy // Preserve the createdBy field
+            createdBy: lead.createdBy
           };
         }
         return lead;
@@ -88,7 +86,6 @@ const Leads = () => {
       toast.success("Lead updated successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update lead");
-      console.error(err);
     }
   };
 
@@ -103,7 +100,6 @@ const Leads = () => {
   const toggleFavorite = (id, lead) => {
     const isFavorite = !lead.favourite;
     
-    // Only update UI state
     const updatedLeads = leads.map((l) => {
       if (l._id === id) {
         return {
@@ -115,7 +111,6 @@ const Leads = () => {
     });
     setLeads(updatedLeads);
 
-    // Show toast immediately
     toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
       type: isFavorite ? "success" : "info",
       toastId: `favorite-${id}`,
@@ -158,7 +153,7 @@ const Leads = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
               <h1 className="text-2xl font-semibold text-gray-900">
-                All Leads
+                Today's Scheduled Leads
               </h1>
             </div>
             <div className="flex items-center gap-4">
@@ -233,6 +228,7 @@ const Leads = () => {
           </div>
         </div>
       </div>
+
       {editingLead && (
         <EditLeadModal
           lead={editingLead}
@@ -261,4 +257,4 @@ const Leads = () => {
   );
 };
 
-export default Leads;
+export default TodayScheduled;
