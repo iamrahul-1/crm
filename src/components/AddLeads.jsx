@@ -40,10 +40,10 @@ const AddLeads = () => {
   const fetchCps = useCallback(async (query = "") => {
     setLoadingCps(true);
     setCpError(null);
-
+    
     try {
-      const response = await api.get(`/cp?search=${query}`);
-
+      const response = await api.get(`/cp/search?query=${query}`);
+      
       // Check if response has the expected structure
       if (!response.data?.success || !response.data?.data) {
         throw new Error("Invalid response format from server");
@@ -56,20 +56,18 @@ const AddLeads = () => {
         name: cp.name,
         phone: cp.phone,
         role: cp.role,
-        companyRole: cp.companyRole,
+        companyRole: cp.companyRole
       }));
-
+      
       setCpOptions(options);
     } catch (error) {
       console.error("Error fetching CPs:", error);
       setCpError("Failed to fetch channel partners. Please try again later.");
-      toast.error(
-        error.response?.data?.message || "Failed to fetch channel partners"
-      );
+      toast.error(error.response?.data?.message || "Failed to fetch channel partners");
     } finally {
       setLoadingCps(false);
     }
-  }, []); // Removed api from dependencies since it's a stable reference
+  }, []);
 
   useEffect(() => {
     fetchCps();
@@ -77,11 +75,15 @@ const AddLeads = () => {
 
   // Search CPs when search query changes
   useEffect(() => {
-    if (searchQuery.trim()) {
-      fetchCps(searchQuery);
-    } else {
-      fetchCps();
-    }
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery) {
+        fetchCps(searchQuery);
+      } else {
+        fetchCps();
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, fetchCps]);
 
   const handleChange = (e) => {

@@ -77,7 +77,7 @@ function Navigation({ isOpen, toggleMenu }) {
 
   const navLinks = [
     { id: 3, path: "/cp", label: "Channel Partner", icon: <FaUserFriends /> },
-    { id: 4, path: "/profile", label: "Profile", icon: <FaUser /> },
+    // { id: 4, path: "/profile", label: "Profile", icon: <FaUser /> },
     { id: 5, path: "/settings", label: "Settings", icon: <FaCog /> },
     {
       id: 6,

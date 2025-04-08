@@ -60,7 +60,7 @@ function App() {
                       <Route path="/leads/add" element={<AddLeads />} />
                       <Route path="/leads/all" element={<Leads />} />
                       <Route path="/leads/new" element={<NewLeads />} />
-                      <Route path="/profile" element={<Profile />} />
+                      {/* <Route path="/profile" element={<Profile />} /> */}
                       <Route path="/settings" element={<Setting />} />
                       <Route path="/leads/missed" element={<MissedLeads />} />
                       <Route
