@@ -35,7 +35,7 @@ const Leads = () => {
   const fetchLeads = useCallback(async () => {
     try {
       const response = await api.get(
-        `/leads?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/all?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log(response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
