@@ -47,7 +47,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
         // Fetch total leads
-        const totalResponse = await api.get("/leads");
+        const totalResponse = await api.get("/leads/all");
         const total = totalResponse.data.totalLeads ?? 0;
 
         // Fetch today's leads
