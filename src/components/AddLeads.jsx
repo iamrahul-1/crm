@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../services/api";
@@ -34,29 +34,55 @@ const AddLeads = () => {
 
   const [cpOptions, setCpOptions] = useState([]);
   const [loadingCps, setLoadingCps] = useState(false);
+  const [cpError, setCpError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const fetchCps = async () => {
-      setLoadingCps(true);
-      try {
-        const response = await api.get("/cp");
-        const cpData = response.data.cps;
-        const options = cpData.map((cp) => ({
-          value: cp._id,
-          label: `${cp.name} - ${cp.phone}`,
-        }));
-        setCpOptions(options);
-      } catch (error) {
-        console.error("Error fetching CPs:", error);
-        toast.error("Failed to fetch channel partners");
-      } finally {
-        setLoadingCps(false);
-      }
-    };
+  const fetchCps = useCallback(async (query = "") => {
+    setLoadingCps(true);
+    setCpError(null);
 
+    try {
+      const response = await api.get(`/cp?search=${query}`);
+
+      // Check if response has the expected structure
+      if (!response.data?.success || !response.data?.data) {
+        throw new Error("Invalid response format from server");
+      }
+
+      const cpData = response.data.data;
+      const options = cpData.map((cp) => ({
+        value: cp._id,
+        label: `${cp.name} - ${cp.phone}`,
+        name: cp.name,
+        phone: cp.phone,
+        role: cp.role,
+        companyRole: cp.companyRole,
+      }));
+
+      setCpOptions(options);
+    } catch (error) {
+      console.error("Error fetching CPs:", error);
+      setCpError("Failed to fetch channel partners. Please try again later.");
+      toast.error(
+        error.response?.data?.message || "Failed to fetch channel partners"
+      );
+    } finally {
+      setLoadingCps(false);
+    }
+  }, []); // Removed api from dependencies since it's a stable reference
+
+  useEffect(() => {
     fetchCps();
-  }, []);
+  }, [fetchCps]);
+
+  // Search CPs when search query changes
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      fetchCps(searchQuery);
+    } else {
+      fetchCps();
+    }
+  }, [searchQuery, fetchCps]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -172,6 +198,12 @@ const AddLeads = () => {
           <h1 className="text-2xl font-semibold text-gray-900 mb-8">
             Add New Lead
           </h1>
+
+          {cpError && (
+            <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-6">
+              {cpError}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="grid gap-6">
             {/* Personal Information */}

@@ -1,7 +1,21 @@
-import React from 'react';
-import { FiAlertCircle } from "react-icons/fi";
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import { FiAlertCircle, FiLoader } from "react-icons/fi";
 
 const DeleteLeadModal = ({ onClose, onDelete }) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete();
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl transform transition-all">
@@ -22,15 +36,29 @@ const DeleteLeadModal = ({ onClose, onDelete }) => {
             Cancel
           </button>
           <button
-            onClick={onDelete}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={`flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-medium transition-colors ${
+              isDeleting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-700'
+            }`}
           >
-            Delete
+            {isDeleting ? (
+              <span className="flex items-center justify-center">
+                <FiLoader className="animate-spin mr-2" /> Deleting...
+              </span>
+            ) : (
+              'Delete'
+            )}
           </button>
         </div>
       </div>
     </div>
   );
+};
+
+DeleteLeadModal.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 };
 
 export default DeleteLeadModal;

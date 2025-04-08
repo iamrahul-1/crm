@@ -26,7 +26,10 @@ const Leads = () => {
     try {
       const response = await api.get("/auth/me");
       setCurrentUser(response.data);
-      
+      // Get user role from response
+      const userRole = response.data.role || 'user';
+      // Store user role in state or use directly
+      console.log('User Role:', userRole);
     } catch (err) {
       console.error("Failed to fetch user:", err);
     }
@@ -139,6 +142,7 @@ const Leads = () => {
     setEditingLead,
     setDeleteConfirm,
     toggleFavorite,
+    userRole: currentUser?.role || 'user'  // Pass user role
   });
 
   const filteredLeads = leads.filter((lead) => {

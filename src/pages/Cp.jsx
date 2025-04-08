@@ -5,6 +5,7 @@ import { FiEdit2, FiTrash2, FiSearch, FiEye } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditCpModal from "../components/EditCpModal";
+import DeleteLeadModal from "../components/DeleteLeadModal";
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -24,8 +25,10 @@ const Agents = () => {
     try {
       const response = await api.get("/auth/me");
       setCurrentUser(response.data);
+      return true;
     } catch (err) {
       console.error("Failed to fetch user:", err);
+      return false;
     }
   }, []);
 
@@ -36,35 +39,54 @@ const Agents = () => {
       const response = await api.get(
         `/cp?page=${currentPage}&limit=${limit}&search=${searchQuery}`
       );
-      setAgents(response.data.cps || []);
-      setTotalPages(response.data.totalPages || 1);
+      console.log("CP Response:", response.data); // Debug log
+
+      // Check if response has the expected structure
+      if (!response.data?.success || !response.data?.data) {
+        throw new Error("Invalid response format from server");
+      }
+
+      setAgents(response.data.data);
+      setTotalPages(response.data.pagination.pages || 1);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch agents");
+      setError(
+        err.response?.data?.message || "Failed to fetch channel partners"
+      );
       toast.error(
         err.response?.data?.message ||
-          "Failed to fetch agents. Please try again later."
+          "Failed to fetch channel partners. Please try again later."
       );
+      console.error("Error fetching CPs:", err);
     } finally {
       setLoading(false);
     }
   }, [currentPage, limit, searchQuery]);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchAgents();
-    }
-  }, [fetchAgents, currentUser]);
+    const fetchData = async () => {
+      const userFetched = await fetchUser();
+      if (userFetched) {
+        fetchAgents();
+      }
+    };
+    fetchData();
+  }, [fetchAgents, fetchUser]);
 
   const handleEditAgent = async (updatedData) => {
     try {
       const response = await api.put(`/cp/${editingAgent._id}`, updatedData);
+      console.log("Update Response:", response.data); // Debug log
+
+      if (!response.data?.success) {
+        throw new Error(
+          response.data?.message || "Failed to update channel partner"
+        );
+      }
+
+      // Update the local state with the new data
       setAgents(
         agents.map((agent) =>
-          agent._id === editingAgent._id ? response.data.cp : agent
+          agent._id === editingAgent._id ? response.data.data : agent
         )
       );
       setEditingAgent(null);
@@ -73,7 +95,7 @@ const Agents = () => {
       toast.error(
         err.response?.data?.message || "Failed to update channel partner"
       );
-      console.error(err);
+      console.error("Error updating CP:", err);
     }
   };
 
@@ -134,13 +156,14 @@ const Agents = () => {
           >
             <FiEdit2 size={18} />
           </button>
-          {/* <button
+          {/* Uncomment the delete button */}
+          <button
             onClick={() => setDeleteConfirm(row._id)}
-            className="p-1.5 text-red-600 hover:text-red-800"
+            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
             title="Delete"
           >
             <FiTrash2 size={18} />
-          </button> */}
+          </button>
         </div>
       ),
     },

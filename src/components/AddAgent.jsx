@@ -390,7 +390,7 @@ const AddAgent = () => {
             <div className="flex gap-4 justify-end mt-6">
               <button
                 type="button"
-                onClick={() => navigate("/agents/all")}
+                onClick={() => navigate("/cp")}
                 className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                 disabled={isSubmitting}
               >

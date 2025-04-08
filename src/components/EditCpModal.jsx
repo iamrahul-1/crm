@@ -1,82 +1,74 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
-import {
-  FiX,
-  FiUser,
-  FiPhone,
-  FiBriefcase,
-  FiCalendar,
-} from "react-icons/fi";
+import { FiX, FiUser, FiBriefcase } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 const EditCpModal = ({ cp, onClose, onSave }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: cp.name || "",
     phone: cp.phone || "",
     role: cp.role || "individual",
     companyRole: cp.companyRole || "",
+    ownerName: cp.ownerName || "",
+    ownerContact: cp.ownerContact || "",
+    designation: cp.designation || "",
+    firmName: cp.firmName || "",
     date: cp.date
       ? new Date(cp.date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0],
   });
+
   const [errors, setErrors] = useState({});
   const [dirtyFields, setDirtyFields] = useState({});
-
-  const validatePhone = (phone) => {
-    const phoneRegex = /^\d{10}$/;
-    return phoneRegex.test(phone);
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Mark field as dirty on first change
-    if (!dirtyFields[name]) {
-      setDirtyFields((prev) => ({
-        ...prev,
-        [name]: true,
-      }));
-    }
+    setDirtyFields((prev) => ({ ...prev, [name]: true }));
 
-    if (name === "phone") {
+    if (name === "phone" || name === "ownerContact") {
       const sanitizedValue = value.replace(/\D/g, "").slice(0, 10);
-      // Convert to number for the backend
-      const phoneNumber = sanitizedValue ? parseInt(sanitizedValue, 10) : "";
-      setFormData((prev) => ({ ...prev, [name]: phoneNumber }));
-
-      if (sanitizedValue.length !== 0 && !validatePhone(sanitizedValue)) {
-        setErrors((prev) => ({
-          ...prev,
-          phone: "Phone number must be 10 digits",
-        }));
-      } else {
-        setErrors((prev) => ({ ...prev, phone: "" }));
-      }
+      setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
-      if (errors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: "" }));
-      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate required fields and phone number
     const requiredFields = ["name", "phone", "role"];
     const newErrors = {};
+
     requiredFields.forEach((field) => {
-      const value = formData[field];
-      if (!value || (typeof value === "string" && !value.trim())) {
-        newErrors[field] = `${
-          field.charAt(0).toUpperCase() + field.slice(1)
-        } is required`;
+      if (!formData[field]) {
+        newErrors[field] = "This field is required";
       }
     });
 
-    // Add phone validation
-    if (!validatePhone(formData.phone.toString())) {
+    if (!validatePhone(formData.phone)) {
       newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    if (formData.role === "company") {
+      if (!formData.companyRole) {
+        newErrors.companyRole = "Company role is required";
+      }
+      if (formData.companyRole === "employee") {
+        if (!formData.ownerName) {
+          newErrors.ownerName = "Owner name is required";
+        }
+        if (!formData.ownerContact) {
+          newErrors.ownerContact = "Owner contact is required";
+        }
+        if (!formData.designation) {
+          newErrors.designation = "Designation is required";
+        }
+        if (!formData.firmName) {
+          newErrors.firmName = "Firm name is required";
+        }
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -84,15 +76,41 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
       return;
     }
 
-    onSave(formData);
+    setIsSubmitting(true);
+    try {
+      const dataToSend = { ...formData };
+
+      // Convert phone numbers to numbers
+      if (dataToSend.phone) {
+        dataToSend.phone = parseInt(dataToSend.phone);
+      }
+      if (dataToSend.ownerContact) {
+        dataToSend.ownerContact = parseInt(dataToSend.ownerContact);
+      }
+
+      await onSave(dataToSend);
+      onClose();
+      toast.success("Channel Partner updated successfully");
+    } catch (error) {
+      toast.error(error.message || "Failed to update channel partner");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Edit Channel Partner</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+              Edit Channel Partner
+            </h2>
             <p className="text-sm text-gray-500">
               Update channel partner information
             </p>
@@ -108,7 +126,7 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
         <div className="p-6 pt-0 overflow-y-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information */}
-            <div className="bg-white rounded-lg p-6 border border-gray-100">
+            <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2.5 bg-blue-50 rounded-lg">
                   <FiUser className="w-5 h-5 text-blue-600" />
@@ -147,41 +165,27 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
                   <label className="block text-sm text-gray-600 mb-2">
                     Phone Number
                   </label>
-                  <div className="relative">
-                    <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone ? formData.phone.toString() : ""}
-                      onChange={handleChange}
-                      placeholder="Enter 10 digit number"
-                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
-                        dirtyFields.phone && errors.phone
-                          ? "border-red-500"
-                          : "border-gray-200"
-                      } rounded-lg text-sm text-gray-800`}
-                      required
-                    />
-                  </div>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className={`w-full px-3 py-2.5 bg-white border ${
+                      dirtyFields.phone && errors.phone
+                        ? "border-red-500"
+                        : "border-gray-200"
+                    } rounded-lg text-sm text-gray-800`}
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    maxLength="10"
+                    required
+                  />
                   {dirtyFields.phone && errors.phone && (
                     <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Role Information */}
-            <div className="bg-white rounded-lg p-6 border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 bg-green-50 rounded-lg">
-                  <FiBriefcase className="w-5 h-5 text-green-600" />
-                </div>
-                <h2 className="text-base font-medium text-gray-800">
-                  Role Information
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Role Selection */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-2">
@@ -198,58 +202,195 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
                     <option value="company">Company</option>
                   </select>
                 </div>
+              </div>
+            </div>
 
-                {/* Company Role - Conditional */}
-                {formData.role === "company" && (
+            {/* Company Information */}
+            {formData.role === "company" && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-green-50 rounded-lg">
+                    <FiBriefcase className="w-5 h-5 text-green-600" />
+                  </div>
+                  <h2 className="text-base font-medium text-gray-800">
+                    Company Information
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Company Role */}
                   <div>
                     <label className="block text-sm text-gray-600 mb-2">
                       Company Role
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="companyRole"
                       value={formData.companyRole}
                       onChange={handleChange}
-                      placeholder="Enter company role"
                       className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                       required
-                    />
+                    >
+                      <option value="employee">Employee</option>
+                    </select>
                   </div>
-                )}
 
-                {/* Date Input */}
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
-                      required
-                    />
-                  </div>
+                  {/* Employee Specific Fields */}
+                  {formData.companyRole === "employee" && (
+                    <>
+                      {/* Owner Name */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">
+                          Owner Name
+                        </label>
+                        <input
+                          type="text"
+                          name="ownerName"
+                          value={formData.ownerName}
+                          onChange={handleChange}
+                          placeholder="Enter owner name"
+                          className={`w-full px-3 py-2.5 bg-white border ${
+                            dirtyFields.ownerName && errors.ownerName
+                              ? "border-red-500"
+                              : "border-gray-200"
+                          } rounded-lg text-sm text-gray-800`}
+                          required
+                        />
+                        {dirtyFields.ownerName && errors.ownerName && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.ownerName}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Owner Contact */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">
+                          Owner Contact
+                        </label>
+                        <input
+                          type="tel"
+                          name="ownerContact"
+                          value={formData.ownerContact}
+                          onChange={handleChange}
+                          placeholder="Enter owner contact"
+                          className={`w-full px-3 py-2.5 bg-white border ${
+                            dirtyFields.ownerContact && errors.ownerContact
+                              ? "border-red-500"
+                              : "border-gray-200"
+                          } rounded-lg text-sm text-gray-800`}
+                          pattern="[0-9]*"
+                          inputMode="numeric"
+                          maxLength="10"
+                          required
+                        />
+                        {dirtyFields.ownerContact && errors.ownerContact && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.ownerContact}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Designation */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">
+                          Designation
+                        </label>
+                        <input
+                          type="text"
+                          name="designation"
+                          value={formData.designation}
+                          onChange={handleChange}
+                          placeholder="Enter designation"
+                          className={`w-full px-3 py-2.5 bg-white border ${
+                            dirtyFields.designation && errors.designation
+                              ? "border-red-500"
+                              : "border-gray-200"
+                          } rounded-lg text-sm text-gray-800`}
+                          required
+                        />
+                        {dirtyFields.designation && errors.designation && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.designation}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Firm Name */}
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">
+                          Firm Name
+                        </label>
+                        <input
+                          type="text"
+                          name="firmName"
+                          value={formData.firmName}
+                          onChange={handleChange}
+                          placeholder="Enter firm name"
+                          className={`w-full px-3 py-2.5 bg-white border ${
+                            dirtyFields.firmName && errors.firmName
+                              ? "border-red-500"
+                              : "border-gray-200"
+                          } rounded-lg text-sm text-gray-800`}
+                          required
+                        />
+                        {dirtyFields.firmName && errors.firmName && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.firmName}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t">
+            {/* Date Input */}
+            {/* <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-purple-50 rounded-lg">
+                  <FiCalendar className="w-5 h-5 text-purple-600" />
+                </div>
+                <h2 className="text-base font-medium text-gray-800">Additional Information</h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">Date</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
+                    required
+                  />
+                </div>
+              </div>
+            </div> */}
+
+            <div className="flex gap-4 justify-end mt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                disabled={isSubmitting}
               >
-                Save Changes
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </button>
             </div>
           </form>
@@ -265,6 +406,10 @@ EditCpModal.propTypes = {
     phone: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     role: PropTypes.string,
     companyRole: PropTypes.string,
+    ownerName: PropTypes.string,
+    ownerContact: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    designation: PropTypes.string,
+    firmName: PropTypes.string,
     date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
   }).isRequired,
   onClose: PropTypes.func.isRequired,

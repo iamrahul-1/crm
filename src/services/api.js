@@ -32,14 +32,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { response } = error;
-    
+
     if (!response) {
       toast.error("Network error. Please check your connection.");
       return Promise.reject(error);
     }
 
     // Don't show session expired for login endpoint
-    const isLoginRequest = response.config.url.includes('/auth/login');
+    const isLoginRequest = response.config.url.includes("/auth/login");
 
     switch (response.status) {
       case 401:
@@ -47,7 +47,7 @@ api.interceptors.response.use(
           toast.error("Session expired. Please login again.");
           localStorage.removeItem("token");
           // Add delay before redirect
-          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
           window.location.href = "/login";
         }
         break;
