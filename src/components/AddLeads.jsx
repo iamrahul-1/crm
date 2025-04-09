@@ -42,11 +42,11 @@ const AddLeads = () => {
     setCpError(null);
     
     try {
-      const response = await api.get(`/cp/search?query=${query}`);
+      const endpoint = query ? `/cp/search?query=${query}` : `/cp`;
+      const response = await api.get(endpoint);
       
-      // Check if response has the expected structure
-      if (!response.data?.success || !response.data?.data) {
-        throw new Error("Invalid response format from server");
+      if (!response.data?.success) {
+        throw new Error("Failed to fetch channel partners");
       }
 
       const cpData = response.data.data;
@@ -62,7 +62,7 @@ const AddLeads = () => {
       setCpOptions(options);
     } catch (error) {
       console.error("Error fetching CPs:", error);
-      setCpError("Failed to fetch channel partners. Please try again later.");
+      setCpError(error.response?.data?.message || "Failed to fetch channel partners");
       toast.error(error.response?.data?.message || "Failed to fetch channel partners");
     } finally {
       setLoadingCps(false);
@@ -70,10 +70,11 @@ const AddLeads = () => {
   }, []);
 
   useEffect(() => {
+    // Fetch CPs when component mounts
     fetchCps();
   }, [fetchCps]);
 
-  // Search CPs when search query changes
+  // Search functionality
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery) {
