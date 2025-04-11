@@ -18,7 +18,7 @@ import RejectedLeads from "./pages/RejectedLeads";
 import MissedLeads from "./pages/missed";
 import FavoriteLeads from "./pages/fav";
 import Agents from "./pages/Cp";
-import UnderDevelopment from "./components/UnderDevelopment";
+
 import LeadPotential from "./pages/LeadPotential";
 import LeadStatus from "./pages/LeadStatus";
 import Register from "./pages/Register";

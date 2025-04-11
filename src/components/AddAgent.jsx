@@ -59,20 +59,6 @@ const AddAgent = () => {
       if (!formData.companyRole) {
         newErrors.companyRole = "Company role is required";
       }
-      if (formData.companyRole === "employee") {
-        if (!formData.ownerName) {
-          newErrors.ownerName = "Owner name is required";
-        }
-        if (!formData.ownerContact) {
-          newErrors.ownerContact = "Owner contact is required";
-        }
-        if (!formData.designation) {
-          newErrors.designation = "Designation is required";
-        }
-        if (!formData.firmName) {
-          newErrors.firmName = "Firm name is required";
-        }
-      }
     }
 
     // Phone number validations
@@ -91,12 +77,38 @@ const AddAgent = () => {
       return;
     }
 
+    // Prepare data to send - convert empty strings to null for optional fields
+    const dataToSend = { ...formData };
+    
+    // Convert phone numbers to numbers
+    if (formData.phone) {
+      dataToSend.phone = parseInt(formData.phone);
+    }
+    if (formData.ownerContact) {
+      dataToSend.ownerContact = parseInt(formData.ownerContact);
+    }
+
+    // Set companyRole to null if it's empty string
+    if (dataToSend.companyRole === "") {
+      dataToSend.companyRole = null;
+    }
+
+    // Remove empty optional fields
+    ['companyRole', 'ownerName', 'ownerContact', 'designation', 'firmName'].forEach(field => {
+      if (dataToSend[field] === "") {
+        delete dataToSend[field];
+      }
+    });
+
     setIsSubmitting(true);
     try {
-      const response = await api.post("/cp", formData);
+      console.log('Data being sent:', dataToSend);
+      const response = await api.post("/cp", dataToSend);
+      console.log('API response:', response.data);
       toast.success("Channel Partner added successfully");
       navigate("/cp");
     } catch (error) {
+      console.error('Error details:', error.response?.data);
       toast.error(
         error.response?.data?.message || "Failed to add channel partner"
       );
@@ -294,7 +306,6 @@ const AddAgent = () => {
                               ? "border-red-500"
                               : "border-gray-200"
                           } rounded-lg text-sm text-gray-800`}
-                          required
                         />
                         {dirtyFields.ownerName && errors.ownerName && (
                           <p className="text-red-500 text-xs mt-1">
@@ -323,7 +334,6 @@ const AddAgent = () => {
                           pattern="[0-9]*"
                           inputMode="numeric"
                           maxLength="10"
-                          required
                         />
                         {dirtyFields.ownerContact && errors.ownerContact && (
                           <p className="text-red-500 text-xs mt-1">
@@ -348,7 +358,6 @@ const AddAgent = () => {
                               ? "border-red-500"
                               : "border-gray-200"
                           } rounded-lg text-sm text-gray-800`}
-                          required
                         />
                         {dirtyFields.designation && errors.designation && (
                           <p className="text-red-500 text-xs mt-1">
@@ -373,7 +382,6 @@ const AddAgent = () => {
                               ? "border-red-500"
                               : "border-gray-200"
                           } rounded-lg text-sm text-gray-800`}
-                          required
                         />
                         {dirtyFields.firmName && errors.firmName && (
                           <p className="text-red-500 text-xs mt-1">

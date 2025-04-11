@@ -42,94 +42,184 @@ const Dashboard = () => {
     weekend: 0,
   });
 
+  const calculateDates = () => {
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const todayDate = `${year}-${month}-${day}`;
+
+    // Get tomorrow's date in YYYY-MM-DD format
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowYear = tomorrow.getFullYear();
+    const tomorrowMonth = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const tomorrowDay = String(tomorrow.getDate()).padStart(2, "0");
+    const tomorrowDate = `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`;
+
+    // Get weekend dates in YYYY-MM-DD format
+    const weekend = new Date();
+    const weekendDay = weekend.getDay();
+    let saturday, sunday;
+    if (weekendDay === 6) {
+      // Today is Saturday
+      saturday = new Date(weekend);
+      sunday = new Date(weekend);
+      sunday.setDate(sunday.getDate() + 1);
+    } else if (weekendDay === 0) {
+      // Today is Sunday
+      saturday = new Date(weekend);
+      saturday.setDate(saturday.getDate() - 1);
+      sunday = new Date(weekend);
+    } else {
+      // Any other day
+      const daysUntilSaturday = 6 - weekendDay;
+      saturday = new Date(weekend);
+      saturday.setDate(saturday.getDate() + daysUntilSaturday);
+      sunday = new Date(saturday);
+      sunday.setDate(sunday.getDate() + 1);
+    }
+
+    const saturdayYear = saturday.getFullYear();
+    const saturdayMonth = String(saturday.getMonth() + 1).padStart(2, "0");
+    const saturdayDay = String(saturday.getDate()).padStart(2, "0");
+    const saturdayDate = `${saturdayYear}-${saturdayMonth}-${saturdayDay}`;
+
+    const sundayYear = sunday.getFullYear();
+    const sundayMonth = String(sunday.getMonth() + 1).padStart(2, "0");
+    const sundayDay = String(sunday.getDate()).padStart(2, "0");
+    const sundayDate = `${sundayYear}-${sundayMonth}-${sundayDay}`;
+
+    return {
+      todayDate,
+      tomorrowDate,
+      saturdayDate,
+      sundayDate,
+    };
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // Fetch total leads
-        const totalResponse = await api.get("/leads/all");
-        const total = totalResponse.data.totalLeads ?? 0;
+        
+        // Get dates once
+        const dates = calculateDates();
 
-        // Fetch today's leads
-        const todayResponse = await api.get("/leads/schedule/today");
-        const today = todayResponse.data.totalLeads ?? 0;
+        // Combine all API calls into one Promise.all
+        const [
+          totalRes,
+          hotRes,
+          warmRes,
+          coldRes,
+          todayRes,
+          tomorrowRes,
+          saturdayRes,
+          sundayRes,
+          missedRes,
+          favoriteRes
+        ] = await Promise.all([
+          api.get("/leads/all"),
+          api.get(`/leads/potential/Hot`),
+          api.get(`/leads/potential/Warm`),
+          api.get(`/leads/potential/Cold`),
+          api.get(`/leads/schedule/custom/${dates.todayDate}`),
+          api.get(`/leads/schedule/custom/${dates.tomorrowDate}`),
+          api.get(`/leads/schedule/custom/${dates.saturdayDate}`),
+          api.get(`/leads/schedule/custom/${dates.sundayDate}`),
+          api.get(`/leads/autostatus/missed`),
+          api.get(`/leads/status/favorite`)
+        ]);
 
-        // Fetch tomorrow's leads
-        const tomorrowResponse = await api.get("/leads/schedule/tomorrow");
-        const tomorrow = tomorrowResponse.data.totalLeads ?? 0;
+        // Calculate lead counts
+        const total = totalRes.data.totalLeads ?? 0;
+        const todayLeads = todayRes.data.leads.length;
+        const tomorrowLeads = tomorrowRes.data.leads.length;
+        const weekendLeads = saturdayRes.data.leads.length + sundayRes.data.leads.length;
+        const missed = missedRes.data.totalLeads ?? 0;
+        const favorite = favoriteRes.data.totalLeads ?? 0;
 
-        // Fetch weekend leads
-        const weekendResponse = await api.get("/leads/schedule/weekend");
-        const weekend = weekendResponse.data.totalLeads ?? 0;
-
-        // Fetch missed leads
-        const missedResponse = await api.get("/leads/autostatus/missed");
-        const missed = missedResponse.data.totalLeads ?? 0;
-
-        // Fetch favorite leads
-        const favoriteResponse = await api.get("/leads/status/favorite");
-        const favorite = favoriteResponse.data.totalLeads ?? 0;
-
+        // Update stats
         setStats({
           total,
-          today,
-          tomorrow,
-          weekend,
+          today: todayLeads,
+          tomorrow: tomorrowLeads,
+          weekend: weekendLeads,
           missed,
           favorite,
         });
+
+        // Update lead counts
+        setLeadCounts({
+          rejected: hotRes.data.leads.length,
+          favourite: warmRes.data.leads.length,
+          siteVisited: coldRes.data.leads.length,
+          today: todayLeads,
+          missed,
+          weekend: weekendLeads,
+        });
+
+        // Update chart data
+        setOptions1({
+          data: [
+            { asset: "Hot Lead", amount: hotRes.data.leads.length },
+            { asset: "Warm Lead", amount: warmRes.data.leads.length },
+            { asset: "Cold Lead", amount: coldRes.data.leads.length },
+          ],
+          series: [
+            {
+              type: "pie",
+              angleKey: "amount",
+              legendItemKey: "asset",
+              fills: ["#EF4444", "#F59E0B", "#3B82F6"],
+              tooltip: {
+                renderer: ({ datum }) => ({
+                  content: `${datum.asset}: ${datum.amount} leads`,
+                }),
+              },
+            },
+          ],
+        });
+
+        setOptions2({
+          data: [
+            { asset: "Today", amount: todayLeads },
+            { asset: "Missed", amount: missed },
+            { asset: "Weekend", amount: weekendLeads },
+          ],
+          series: [
+            {
+              type: "pie",
+              angleKey: "amount",
+              legendItemKey: "asset",
+              fills: ["#10B981", "#6B7280", "#EC4899"],
+              tooltip: {
+                renderer: ({ datum }) => ({
+                  content: `${datum.asset}: ${datum.amount} leads`,
+                }),
+              },
+            },
+          ],
+        });
+
       } catch (error) {
-        console.error("Error fetching stats:", error);
-        toast.error("Failed to fetch dashboard statistics");
+        console.error("Error fetching dashboard data:", error);
+        toast.error("Failed to fetch dashboard data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
-  }, []);
-
-  const fetchLeadCounts = async () => {
-    try {
-      const [
-        rejectedRes,
-        favouriteRes,
-        siteVisitedRes,
-        todayRes,
-        missedRes,
-        weekendRes,
-      ] = await Promise.all([
-        api.get(`/leads/status/rejected`),
-        api.get(`/leads/status/favorite`),
-        api.get(`/leads/status/sitevisited`),
-        api.get(`/leads/schedule/today`),
-        api.get(`/leads/autostatus/missed`),
-        api.get(`/leads/schedule/weekend`),
-      ]);
-
-      setLeadCounts({
-        rejected: rejectedRes.data.leads.length,
-        favourite: favouriteRes.data.leads.length,
-        siteVisited: siteVisitedRes.data.leads.length,
-        today: todayRes.data.leads.length,
-        missed: missedRes.data.leads.length,
-        weekend: weekendRes.data.leads.length,
-      });
-    } catch (error) {
-      console.error("Error fetching lead counts:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeadCounts();
+    fetchDashboardData();
   }, []);
 
   // First chart data
   const getData1 = useCallback(
     () => [
-      { asset: "Rejected", amount: leadCounts.rejected },
-      { asset: "Favourite", amount: leadCounts.favourite },
-      { asset: "Site Visited", amount: leadCounts.siteVisited },
+      { asset: "Hot Lead", amount: leadCounts.rejected },
+      { asset: "Warm Lead", amount: leadCounts.favourite },
+      { asset: "Cold Lead", amount: leadCounts.siteVisited },
     ],
     [leadCounts]
   );
@@ -144,102 +234,61 @@ const Dashboard = () => {
     [leadCounts]
   );
 
-  useEffect(() => {
-    const commonOptions = {
-      background: {
-        fill: "transparent",
+  const commonOptions = {
+    background: {
+      fill: "transparent",
+    },
+    padding: {
+      top: 20,
+      right: 20,
+      bottom: 40,
+      left: 20,
+    },
+    legend: {
+      enabled: true,
+      position: "bottom",
+      item: {
+        label: {
+          color: "#4B5563",
+          fontSize: 12,
+          fontFamily: "Inter, system-ui, sans-serif",
+          fontWeight: 500,
+        },
+        marker: {
+          padding: 6,
+          shape: "circle",
+          size: 8,
+        },
+        paddingY: 15,
       },
-      padding: {
-        top: 20,
-        right: 20,
-        bottom: 40,
-        left: 20,
+      spacing: 24,
+    },
+    series: [
+      {
+        type: "pie",
+        angleKey: "amount",
+        legendItemKey: "asset",
+        innerRadius: 0.7,
+        cornerRadius: 6,
+        strokeWidth: 0,
+        calloutLabel: {
+          enabled: true,
+        },
+        sectorLabel: {
+          color: "white",
+          fontWeight: 600,
+          fontSize: 12,
+        },
+        highlightStyle: {
+          item: {
+            fillOpacity: 0.8,
+            stroke: "#FFF",
+            strokeWidth: 2,
+          },
+        },
       },
-      legend: {
-        enabled: true,
-        position: "bottom",
-        item: {
-          label: {
-            color: "#4B5563",
-            fontSize: 12,
-            fontFamily: "Inter, system-ui, sans-serif",
-            fontWeight: 500,
-          },
-          marker: {
-            padding: 6,
-            shape: "circle",
-            size: 8,
-          },
-          paddingY: 15,
-        },
-        spacing: 24,
-      },
-      series: [
-        {
-          type: "pie",
-          angleKey: "amount",
-          legendItemKey: "asset",
-          innerRadius: 0.7,
-          cornerRadius: 6,
-          strokeWidth: 0,
-          calloutLabel: {
-            enabled: true,
-          },
-          sectorLabel: {
-            color: "white",
-            fontWeight: 600,
-            fontSize: 12,
-          },
-          highlightStyle: {
-            item: {
-              fillOpacity: 0.8,
-              stroke: "#FFF",
-              strokeWidth: 2,
-            },
-          },
-        },
-      ],
-    };
-
-    const options1 = {
-      ...commonOptions,
-      data: getData1(),
-      series: [
-        {
-          ...commonOptions.series[0],
-          fills: ["#EF4444", "#F59E0B", "#3B82F6"],
-          tooltip: {
-            renderer: ({ datum }) => {
-              return {
-                content: `${datum.asset}: ${datum.amount} leads`,
-              };
-            },
-          },
-        },
-      ],
-    };
-
-    const options2 = {
-      ...commonOptions,
-      data: getData2(),
-      series: [
-        {
-          ...commonOptions.series[0],
-          fills: ["#10B981", "#6B7280", "#EC4899"],
-          tooltip: {
-            renderer: ({ datum }) => {
-              return {
-                content: `${datum.asset}: ${datum.amount} leads`,
-              };
-            },
-          },
-        },
-      ],
-    };
-
-    setOptions1(options1);
-    setOptions2(options2);
-  }, [getData1, getData2]);
+    ],
+  };
 
   const StatCard = ({ icon: Icon, color, label, value, onClick }) => (
     <button onClick={onClick} className="relative group">
@@ -378,21 +427,21 @@ const Dashboard = () => {
                       color="bg-red-500"
                       label="Hot Lead"
                       value={leadCounts.rejected}
-                      onClick={() => navigate("/leads/potential/hot")}
+                      onClick={() => navigate("/leads/potential/Hot")}
                     />
                     <LeadTypeCard
                       icon={FiSun}
                       color="bg-orange-500"
                       label="Warm Lead"
                       value={leadCounts.favourite}
-                      onClick={() => navigate("/leads/potential/warm")}
+                      onClick={() => navigate("/leads/potential/Warm")}
                     />
                     <LeadTypeCard
                       icon={FiCloud}
                       color="bg-blue-500"
                       label="Cold Lead"
                       value={leadCounts.siteVisited}
-                      onClick={() => navigate("/leads/potential/cold")}
+                      onClick={() => navigate("/leads/potential/Cold")}
                     />
                   </div>
                 </div>

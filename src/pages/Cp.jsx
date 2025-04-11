@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { FiEdit2, FiTrash2, FiSearch, FiEye } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import EditCpModal from "../components/EditCpModal";
@@ -19,6 +19,9 @@ const Agents = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [viewingLeadList, setViewingLeadList] = useState(null);
+  const [leadListData, setLeadListData] = useState([]);
+  const [leadListLoading, setLeadListLoading] = useState(false);
   const limit = 10;
 
   const fetchUser = useCallback(async () => {
@@ -61,6 +64,26 @@ const Agents = () => {
       setLoading(false);
     }
   }, [currentPage, limit, searchQuery]);
+
+  const fetchLeadList = useCallback(async (cpId) => {
+    try {
+      setLeadListLoading(true);
+      const response = await api.get(`/cp/${cpId}/leads`);
+      console.log('Lead list response:', response.data);
+      setLeadListData(response.data.leads || []);
+    } catch (error) {
+      console.error("Error fetching lead list:", error);
+      toast.error("Failed to fetch lead list");
+    } finally {
+      setLeadListLoading(false);
+    }
+  }, []);
+
+  const handleViewLeadList = (cpId) => {
+    console.log('Fetching leads for CP:', cpId);
+    fetchLeadList(cpId);
+    setViewingLeadList(cpId);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,11 +155,22 @@ const Agents = () => {
         </span>
       ),
     },
-    // {
-    //   header: "Date",
-    //   accessor: "date",
-    //   render: (row) => <span>{new Date(row.date).toLocaleDateString()}</span>,
-    // },
+    {
+      header: "Lead List",
+      accessor: "leadListName",
+      render: (row) => (
+        <div className="flex items-center justify-center">
+          <span className="text-center">{row.leadListName}</span>
+          <button
+            onClick={() => handleViewLeadList(row._id)}
+            className="px-3 py-1.5 text-sm rounded-lg text-blue-600 hover:bg-blue-50 transition-colors ml-2"
+            title="View Leads"
+          >
+            View
+          </button>
+        </div>
+      ),
+    },
     {
       header: "Action",
       accessor: "actions",
@@ -280,12 +314,94 @@ const Agents = () => {
         />
       )}
 
-      {viewingAgent && (
-        <ViewLeadModal
-          lead={viewingAgent}
-          onClose={() => setViewingAgent(null)}
-          onRefresh={fetchAgents}
-        />
+      {viewingLeadList && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h2 className="text-xl font-normal text-gray-800">Lead List</h2>
+              <button
+                onClick={() => {
+                  setViewingLeadList(null);
+                  setLeadListData([]);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              {leadListLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : leadListData.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-500">
+                    No leads found for this CP
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">Total leads: {leadListData.length}</p>
+                  <div className="space-y-4">
+                    {leadListData.map((lead, index) => (
+                      <div 
+                        key={index} 
+                        className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="p-4 flex items-center">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-4">
+                            <span className="text-lg font-semibold text-gray-800">
+                              {lead.name?.[0]?.toUpperCase() || 'L'}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                {lead.name}
+                              </h3>
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                lead.status === 'inprogress' ? 'bg-blue-100 text-blue-800' :
+                                lead.status === 'closed' ? 'bg-green-100 text-green-800' :
+                                lead.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {lead.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                <span>{lead.phone || 'N/A'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>{lead.purpose || 'N/A'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>{lead.budget || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

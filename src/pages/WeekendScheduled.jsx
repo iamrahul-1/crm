@@ -33,16 +33,80 @@ const WeekendScheduled = () => {
 
   const fetchLeads = useCallback(async () => {
     try {
-      const response = await api.get(
-        `/leads/schedule/weekend?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+      // Get weekend dates in YYYY-MM-DD format
+      const today = new Date();
+      const day = today.getDay();
+      
+      // Calculate Saturday and Sunday dates
+      let saturday, sunday;
+      if (day === 6) { // Today is Saturday
+        saturday = new Date(today);
+        sunday = new Date(today);
+        sunday.setDate(sunday.getDate() + 1);
+      } else if (day === 0) { // Today is Sunday
+        saturday = new Date(today);
+        saturday.setDate(saturday.getDate() - 1);
+        sunday = new Date(today);
+      } else { // Any other day
+        const daysUntilSaturday = 6 - day;
+        saturday = new Date(today);
+        saturday.setDate(saturday.getDate() + daysUntilSaturday);
+        sunday = new Date(saturday);
+        sunday.setDate(sunday.getDate() + 1);
+      }
+
+      // Format dates
+      const formatWeekendDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      const saturdayDate = formatWeekendDate(saturday);
+      const sundayDate = formatWeekendDate(sunday);
+
+      // Get leads for both days
+      const saturdayResponse = await api.get(
+        `/leads/schedule/custom/${saturdayDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
-      console.log("Weekend's leads:",response.data);
-      const updatedLeads = response.data.leads.map((lead) => ({
+      const sundayResponse = await api.get(
+        `/leads/schedule/custom/${sundayDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+      );
+
+      // Combine leads from both days
+      const allLeads = [...saturdayResponse.data.leads, ...sundayResponse.data.leads];
+      
+      // Sort by date and time
+      allLeads.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        if (dateA.getTime() !== dateB.getTime()) {
+          return dateA - dateB;
+        }
+        if (a.time && b.time) {
+          return a.time.localeCompare(b.time);
+        }
+        return 0;
+      });
+
+      console.log("Weekend leads:", allLeads);
+      const updatedLeads = allLeads.map((lead) => ({
         ...lead,
         createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name
       }));
-      setLeads(updatedLeads);
-      setTotalPages(response.data.totalPages || 1);
+      
+      // Calculate total pages based on combined leads
+      const totalItems = allLeads.length;
+      const totalPages = Math.ceil(totalItems / limit);
+      
+      // Get current page leads
+      const start = (currentPage - 1) * limit;
+      const end = start + limit;
+      const pageLeads = allLeads.slice(start, end);
+
+      setLeads(pageLeads);
+      setTotalPages(totalPages);
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch leads");

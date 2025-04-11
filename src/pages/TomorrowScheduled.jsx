@@ -33,8 +33,16 @@ const TomorrowScheduled = () => {
 
   const fetchLeads = useCallback(async () => {
     try {
+      // Get tomorrow's date in YYYY-MM-DD format
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+
       const response = await api.get(
-        `/leads/schedule/tomorrow?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/schedule/custom/${formattedDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log("Tomorrow's leads:", response.data);
       const updatedLeads = response.data.leads.map((lead) => ({

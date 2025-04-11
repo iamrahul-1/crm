@@ -33,8 +33,15 @@ const TodayScheduled = () => {
 
   const fetchLeads = useCallback(async () => {
     try {
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+
       const response = await api.get(
-        `/leads/schedule/today?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/schedule/custom/${formattedDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log("Today's leads:", response.data);
       const updatedLeads = response.data.leads.map((lead) => ({

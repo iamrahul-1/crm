@@ -27,8 +27,8 @@ const CustomScheduled = () => {
   // Helper function to format date in YYYY-MM-DD format
   const formatDateToIST = (date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -45,28 +45,27 @@ const CustomScheduled = () => {
     try {
       setLoading(true);
       const formattedDate = formatDateToIST(selectedDate);
-      console.log('Selected Date:', selectedDate);
-      console.log('Formatted Date:', formattedDate);
-      console.log('API URL:', `/leads/schedule/custom/${formattedDate}`);
-      
-      const response = await api.get(
-        `/leads/schedule/custom/${formattedDate}`
-      );
-      console.log('API Response:', response.data);
-      
+      console.log("Selected Date:", selectedDate);
+      console.log("Formatted Date:", formattedDate);
+      console.log("API URL:", `/leads/schedule/custom/${formattedDate}`);
+
+      const response = await api.get(`/leads/schedule/custom/${formattedDate}`);
+      console.log("API Response:", response.data);
+
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name,
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
     } catch (err) {
-      console.error('API Error:', err);
+      console.error("API Error:", err);
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
       toast.error(
-        err.response?.data?.message || "Failed to fetch leads. Please try again later."
+        err.response?.data?.message ||
+          "Failed to fetch leads. Please try again later."
       );
     }
   }, [selectedDate, currentUser]);
@@ -88,13 +87,13 @@ const CustomScheduled = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
+
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy
+            createdBy: lead.createdBy,
           };
         }
         return lead;
@@ -118,7 +117,7 @@ const CustomScheduled = () => {
 
   const toggleFavorite = (id, lead) => {
     const isFavorite = !lead.favourite;
-    
+
     const updatedLeads = leads.map((l) => {
       if (l._id === id) {
         return {
@@ -157,10 +156,10 @@ const CustomScheduled = () => {
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      (lead.name?.toLowerCase() || '').includes(searchLower) ||
-      String(lead.phone || '').includes(searchQuery) ||
-      (lead.purpose?.toLowerCase() || '').includes(searchLower) ||
-      (lead.remarks?.toLowerCase() || '').includes(searchLower)
+      (lead.name?.toLowerCase() || "").includes(searchLower) ||
+      String(lead.phone || "").includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || "").includes(searchLower)
     );
   });
 
@@ -176,42 +175,56 @@ const CustomScheduled = () => {
   const { daysInMonth, firstDayOfMonth } = getDaysInMonth(currentMonth);
 
   const handleDateClick = (day) => {
-    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    console.log('Clicked Day:', day);
-    console.log('New Date Object:', newDate);
-    console.log('Date to be sent:', formatDateToIST(newDate));
+    const newDate = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      day
+    );
+    console.log("Clicked Day:", day);
+    console.log("New Date Object:", newDate);
+    console.log("Date to be sent:", formatDateToIST(newDate));
     setSelectedDate(newDate);
   };
 
   const changeMonth = (offset) => {
-    const newMonth = new Date(currentMonth.setMonth(currentMonth.getMonth() + offset));
+    const newMonth = new Date(
+      currentMonth.setMonth(currentMonth.getMonth() + offset)
+    );
     setCurrentMonth(new Date(newMonth));
   };
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const renderCalendar = () => {
     const days = [];
     const blanks = [];
 
     for (let i = 0; i < firstDayOfMonth; i++) {
-      blanks.push(
-        <div key={`blank-${i}`} className="p-4"></div>
-      );
+      blanks.push(<div key={`blank-${i}`} className="p-4"></div>);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const isSelected = 
-        selectedDate.getDate() === day && 
+      const isSelected =
+        selectedDate.getDate() === day &&
         selectedDate.getMonth() === currentMonth.getMonth() &&
         selectedDate.getFullYear() === currentMonth.getFullYear();
 
-      const isToday = 
+      const isToday =
         new Date().getDate() === day &&
         new Date().getMonth() === currentMonth.getMonth() &&
         new Date().getFullYear() === currentMonth.getFullYear();
@@ -221,8 +234,8 @@ const CustomScheduled = () => {
           key={day}
           onClick={() => handleDateClick(day)}
           className={`cursor-pointer p-4 text-center transition-all duration-200 hover:bg-blue-50 ${
-            isSelected ? 'bg-blue-500 text-white hover:bg-blue-600' : ''
-          } ${isToday ? 'border-2 border-blue-500' : ''} rounded-lg`}
+            isSelected ? "bg-blue-500 text-white hover:bg-blue-600" : ""
+          } ${isToday ? "border-2 border-blue-500" : ""} rounded-lg`}
         >
           {day}
         </div>
@@ -246,7 +259,8 @@ const CustomScheduled = () => {
                 ←
               </button>
               <h2 className="text-xl font-semibold">
-                {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+                {monthNames[currentMonth.getMonth()]}{" "}
+                {currentMonth.getFullYear()}
               </h2>
               <button
                 onClick={() => changeMonth(1)}
@@ -257,16 +271,17 @@ const CustomScheduled = () => {
             </div>
 
             <div className="grid grid-cols-7 gap-1 mb-2">
-              {dayNames.map(day => (
-                <div key={day} className="text-center font-medium text-gray-600 p-2">
+              {dayNames.map((day) => (
+                <div
+                  key={day}
+                  className="text-center font-medium text-gray-600 p-2"
+                >
                   {day}
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1">
-              {renderCalendar()}
-            </div>
+            <div className="grid grid-cols-7 gap-1">{renderCalendar()}</div>
           </div>
 
           {/* Header Section */}

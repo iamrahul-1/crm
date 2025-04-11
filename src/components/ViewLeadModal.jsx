@@ -16,6 +16,7 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
     budget: "",
     source: "",
     date: new Date().toISOString().split("T")[0],
+    time: "",
     favourite: false,
   };
 
@@ -30,6 +31,7 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
     budget: lead.budget || "",
     source: lead.source || "",
     date: lead.date || defaultLead.date,
+    time: lead.time || "",
     favourite: lead.favourite || false,
   });
 
@@ -120,9 +122,9 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
     try {
       const dataToSend = { ...formData };
 
-      // Remove empty fields
+      // Remove empty fields except for time which should be sent as empty string if not set
       Object.keys(dataToSend).forEach((key) => {
-        if (dataToSend[key] === "" || dataToSend[key] === null) {
+        if (key !== "time" && (dataToSend[key] === "" || dataToSend[key] === null)) {
           delete dataToSend[key];
         }
       });
@@ -130,6 +132,11 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
       // Remove status if it's empty or "new"
       if (!dataToSend.status || dataToSend.status === "new") {
         delete dataToSend.status;
+      }
+
+      // Ensure time is always sent, even if empty
+      if (!dataToSend.time) {
+        dataToSend.time = "";
       }
 
       console.log("Data being sent to API:", dataToSend);
@@ -161,6 +168,19 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
         month: "short",
         year: "numeric",
       });
+    } catch {
+      return "Not set";
+    }
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "Not set";
+    try {
+      const [hours, minutes] = timeString.split(":");
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const formattedHour = hour % 12 || 12;
+      return `${formattedHour}:${minutes} ${ampm}`;
     } catch {
       return "Not set";
     }
@@ -261,8 +281,8 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
                 />
                 <input
                   type="time"
-                  name="schedule"
-                  value={formData.schedule || ""}
+                  name="time"
+                  value={formData.time || ""}
                   onChange={handleChange}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -305,6 +325,26 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
                     <p className="text-sm text-gray-900">{apiData.budget}</p>
                   </div>
                   <div>
+                    <p className="text-sm text-gray-600">Source</p>
+                    <p className="text-sm text-gray-900">{apiData.source}</p>
+                  </div>
+                  {apiData.source === "cp" && (
+                    <div>
+                      <p className="text-sm text-gray-600">Associated CP</p>
+                      <p className="text-sm text-gray-900">
+                        {apiData.associatedCp?.name || "Not assigned"}
+                      </p>
+                    </div>
+                  )}
+                  {apiData.source === "reference" && (
+                    <div>
+                      <p className="text-sm text-gray-600">Reference Name</p>
+                      <p className="text-sm text-gray-900">
+                        {apiData.referenceName || "Not specified"}
+                      </p>
+                    </div>
+                  )}
+                  <div>
                     <p className="text-sm text-gray-600">Status</p>
                     <p className="text-sm text-gray-900">
                       {apiData.status || "Not set"}
@@ -322,6 +362,12 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
                     <p className="text-sm text-gray-600">Date</p>
                     <p className="text-sm text-gray-900">
                       {formatDate(apiData.date)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Time</p>
+                    <p className="text-sm text-gray-900">
+                      {formatTime(apiData.time)}
                     </p>
                   </div>
                 </div>
@@ -375,6 +421,7 @@ ViewLeadModal.propTypes = {
     budget: PropTypes.string,
     source: PropTypes.string,
     date: PropTypes.string,
+    time: PropTypes.string,
     favourite: PropTypes.bool,
     createdAt: PropTypes.string,
     updatedAt: PropTypes.string,
