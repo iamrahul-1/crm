@@ -5,7 +5,6 @@ import "react-toastify/dist/ReactToastify.css";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import PieChart from "./components/Dashboard";
-import Profile from "./pages/Profile";
 import Setting from "./pages/Setting";
 import AddLeads from "./components/AddLeads";
 import AddAgent from "./components/AddAgent";
@@ -18,7 +17,6 @@ import RejectedLeads from "./pages/RejectedLeads";
 import MissedLeads from "./pages/missed";
 import FavoriteLeads from "./pages/fav";
 import Agents from "./pages/Cp";
-
 import LeadPotential from "./pages/LeadPotential";
 import LeadStatus from "./pages/LeadStatus";
 import Register from "./pages/Register";
