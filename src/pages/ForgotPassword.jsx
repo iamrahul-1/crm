@@ -47,8 +47,8 @@ const ForgotPassword = () => {
             <div className="bg-white/10 p-6 rounded-2xl backdrop-blur-lg shadow-xl">
               <h1 className="text-4xl font-bold mb-4">Reset Your Password</h1>
               <p className="text-blue-100 text-lg leading-relaxed">
-                Don't worry! It happens. Please enter the email address associated with
-                your account, and we'll send you a verification code to reset your password.
+                Please enter the email address associated with your account, and
+                we&apos;ll send you a verification code to reset your password.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-6">
@@ -112,7 +112,9 @@ const ForgotPassword = () => {
                       className={`appearance-none block w-full pl-10 pr-3 py-3 border ${
                         emailError ? "border-red-300" : "border-gray-300"
                       } rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                        emailError ? "focus:ring-red-500" : "focus:ring-blue-500"
+                        emailError
+                          ? "focus:ring-red-500"
+                          : "focus:ring-blue-500"
                       } focus:border-transparent transition-all duration-300`}
                       placeholder="you@example.com"
                     />

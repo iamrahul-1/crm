@@ -28,7 +28,10 @@ const NewLeads = () => {
     try {
       const response = await api.get("/auth/me");
       setCurrentUser(response.data);
-      console.log(response.data);
+      // Get user role from response
+      const userRole = response.data.role || "user";
+      // Store user role in state or use directly
+      console.log("User Role:", userRole);
     } catch (err) {
       console.error("Failed to fetch user:", err);
     }
@@ -39,6 +42,7 @@ const NewLeads = () => {
       const response = await api.get(
         `/leads/autostatus/new?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
+      console.log(response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
         createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
@@ -46,11 +50,13 @@ const NewLeads = () => {
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
-    } catch (error) {
-      setError("Failed to fetch open leads");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
-      toast.error("Failed to fetch open leads. Please try again later.");
-      console.error(error);
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to fetch leads. Please try again later."
+      );
     }
   }, [currentPage, limit, searchQuery, currentUser]);
 
@@ -140,23 +146,25 @@ const NewLeads = () => {
     setViewingLead(row);
   };
 
-  const refreshLeads = useCallback(() => {
+  const refreshLeads = () => {
     fetchNewLeads();
-  }, [fetchNewLeads]);
+  };
 
   const columns = getLeadTableColumns({
     handleViewLead,
     setEditingLead,
     setDeleteConfirm,
     toggleFavorite,
+    userRole: currentUser?.role || "user", // Pass user role
   });
 
   const filteredLeads = leads.filter((lead) => {
+    const searchLower = searchQuery.toLowerCase();
     return (
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(lead.phone).includes(searchQuery) ||
-      lead.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.remarks.toLowerCase().includes(searchQuery.toLowerCase())
+      (lead.name?.toLowerCase() || "").includes(searchLower) ||
+      String(lead.phone || "").includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || "").includes(searchLower)
     );
   });
 

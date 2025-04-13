@@ -14,8 +14,12 @@ const LeadStatus = ({ status }) => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/leads/status/${status}`);
-      setLeads(response.data.leads);
+      const response = await api.get(`/leads/status/${status}?populate=createdBy`);
+      const updatedLeads = response.data.leads.map((lead) => ({
+        ...lead,
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
+      }));
+      setLeads(updatedLeads);
     } catch (error) {
       console.error("Error fetching leads:", error);
     } finally {

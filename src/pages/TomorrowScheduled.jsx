@@ -47,7 +47,7 @@ const TomorrowScheduled = () => {
       console.log("Tomorrow's leads:", response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -59,7 +59,7 @@ const TomorrowScheduled = () => {
         err.response?.data?.message || "Failed to fetch leads. Please try again later."
       );
     }
-  }, [currentPage, limit, searchQuery, currentUser]);
+  }, [currentPage, limit, searchQuery]);
 
   useEffect(() => {
     fetchUser();

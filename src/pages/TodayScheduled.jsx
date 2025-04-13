@@ -36,8 +36,8 @@ const TodayScheduled = () => {
       // Get today's date in YYYY-MM-DD format
       const today = new Date();
       const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
 
       const response = await api.get(
@@ -46,7 +46,7 @@ const TodayScheduled = () => {
       console.log("Today's leads:", response.data);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -55,10 +55,11 @@ const TodayScheduled = () => {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
       toast.error(
-        err.response?.data?.message || "Failed to fetch leads. Please try again later."
+        err.response?.data?.message ||
+          "Failed to fetch leads. Please try again later."
       );
     }
-  }, [currentPage, limit, searchQuery, currentUser]);
+  }, [currentPage, limit, searchQuery]);
 
   useEffect(() => {
     fetchUser();
@@ -77,13 +78,13 @@ const TodayScheduled = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
+
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy
+            createdBy: lead.createdBy,
           };
         }
         return lead;
@@ -107,7 +108,7 @@ const TodayScheduled = () => {
 
   const toggleFavorite = (id, lead) => {
     const isFavorite = !lead.favourite;
-    
+
     const updatedLeads = leads.map((l) => {
       if (l._id === id) {
         return {
@@ -146,10 +147,10 @@ const TodayScheduled = () => {
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      (lead.name?.toLowerCase() || '').includes(searchLower) ||
-      String(lead.phone || '').includes(searchQuery) ||
-      (lead.purpose?.toLowerCase() || '').includes(searchLower) ||
-      (lead.remarks?.toLowerCase() || '').includes(searchLower)
+      (lead.name?.toLowerCase() || "").includes(searchLower) ||
+      String(lead.phone || "").includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || "").includes(searchLower)
     );
   });
 

@@ -40,7 +40,7 @@ const FavoriteLeads = () => {
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name
+        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -66,14 +66,14 @@ const FavoriteLeads = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
+
       // Find the lead in the current state and update it
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy // Preserve the createdBy field
+            createdBy: lead.createdBy, // Preserve the createdBy field
           };
         }
         return lead;
@@ -103,7 +103,7 @@ const FavoriteLeads = () => {
           return {
             ...l,
             ...response.data.lead,
-            createdBy: l.createdBy // Preserve the createdBy field
+            createdBy: l.createdBy, // Preserve the createdBy field
           };
         }
         return l;
@@ -167,7 +167,7 @@ const FavoriteLeads = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
               <h1 className="text-2xl font-semibold text-gray-900">
-                Favorite Leads
+                Favourite Leads
               </h1>
               <button className="sm:hidden p-2 hover:bg-gray-100 rounded-lg">
                 <FiSearch className="w-5 h-5 text-gray-500" />

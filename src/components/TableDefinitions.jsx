@@ -52,7 +52,7 @@ export const getLeadTableColumns = ({
         >
           <FiEdit2 size={18} />
         </button>
-        {userRole === 'admin' && (
+        {userRole === "admin" && (
           <button
             onClick={() => setDeleteConfirm(row._id)}
             className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"

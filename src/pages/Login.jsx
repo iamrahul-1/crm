@@ -26,7 +26,7 @@ const Login = () => {
   const emailSuggestions = [
     "shyammodi0609@gmail.com",
     "naishalparikh77@gmail.com",
-    "nileshtiwari300@gmail.com"
+    "nileshtiwari300@gmail.com",
   ];
 
   const validateField = (name, value) => {
@@ -51,7 +51,7 @@ const Login = () => {
       [name]: value,
     }));
 
-    if (name === 'email') {
+    if (name === "email") {
       setShowEmailSuggestions(true);
     }
 
@@ -64,14 +64,14 @@ const Login = () => {
   };
 
   const handleEmailSuggestionClick = (email) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      email
+      email,
     }));
     setShowEmailSuggestions(false);
   };
 
-  const filteredSuggestions = emailSuggestions.filter(email => 
+  const filteredSuggestions = emailSuggestions.filter((email) =>
     email.toLowerCase().includes(formData.email.toLowerCase())
   );
 
@@ -101,41 +101,39 @@ const Login = () => {
       return;
     }
 
-   
-
     setIsLoading(true);
     try {
       const response = await api.post("/auth/login", formData);
-     
-      
+
       const { token } = response.data;
-      
+
       // Add a delay before redirecting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       localStorage.setItem("token", token);
       toast.success("Welcome to Brookstone CRM!!");
-      
+
       // Add a small delay after setting token
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       navigate("/");
     } catch (err) {
       console.log("Login Error Details:", {
         status: err.response?.status,
         statusText: err.response?.statusText,
         data: err.response?.data,
-        error: err.message
+        error: err.message,
       });
-      const errorMessage = err.response?.data?.message || "Invalid email or password";
+      const errorMessage =
+        err.response?.data?.message || "Invalid email or password";
       setErrors((prev) => ({
         ...prev,
         submit: errorMessage,
       }));
       toast.error(errorMessage);
-      
+
       // Add a delay for error state
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } finally {
       setIsLoading(false);
     }
@@ -146,7 +144,7 @@ const Login = () => {
       {/* Left side - Decorative */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-12 items-center justify-center">
         <div className="max-w-md text-white space-y-6">
-          <h1 className="text-4xl font-bold">Welcome to Shatranj CRM</h1>
+          <h1 className="text-4xl font-bold">Welcome to Brookstone CRM</h1>
           <p className="text-blue-100 text-lg">
             Manage your business relationships efficiently and grow your
             network.
@@ -306,7 +304,7 @@ const Login = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              {/* <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
@@ -319,14 +317,14 @@ const Login = () => {
                 >
                   Remember me
                 </label>
-              </div>
+              </div> */}
 
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
                   className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
-                  Forgot password?
+                  Reset password?
                 </Link>
               </div>
             </div>
@@ -375,14 +373,14 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <Link
                 to="/forgot-password"
                 className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
               >
                 Reset Password
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

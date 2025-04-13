@@ -68,10 +68,10 @@ const WeekendScheduled = () => {
 
       // Get leads for both days
       const saturdayResponse = await api.get(
-        `/leads/schedule/custom/${saturdayDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/schedule/custom/${saturdayDate}?populate=createdBy`
       );
       const sundayResponse = await api.get(
-        `/leads/schedule/custom/${sundayDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
+        `/leads/schedule/custom/${sundayDate}?populate=createdBy`
       );
 
       // Combine leads from both days
@@ -93,7 +93,7 @@ const WeekendScheduled = () => {
       console.log("Weekend leads:", allLeads);
       const updatedLeads = allLeads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
       
       // Calculate total pages based on combined leads
@@ -103,7 +103,7 @@ const WeekendScheduled = () => {
       // Get current page leads
       const start = (currentPage - 1) * limit;
       const end = start + limit;
-      const pageLeads = allLeads.slice(start, end);
+      const pageLeads = updatedLeads.slice(start, end);
 
       setLeads(pageLeads);
       setTotalPages(totalPages);
@@ -115,7 +115,7 @@ const WeekendScheduled = () => {
         err.response?.data?.message || "Failed to fetch leads. Please try again later."
       );
     }
-  }, [currentPage, limit, searchQuery, currentUser]);
+  }, [currentPage, limit, searchQuery]);
 
   useEffect(() => {
     fetchUser();

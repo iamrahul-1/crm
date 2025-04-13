@@ -47,15 +47,16 @@ const CustomScheduled = () => {
       const formattedDate = formatDateToIST(selectedDate);
       console.log("Selected Date:", selectedDate);
       console.log("Formatted Date:", formattedDate);
-      console.log("API URL:", `/leads/schedule/custom/${formattedDate}`);
+      console.log("API URL:", `/leads/schedule/custom/${formattedDate}?populate=createdBy`);
 
-      const response = await api.get(`/leads/schedule/custom/${formattedDate}`);
+      const response = await api.get(`/leads/schedule/custom/${formattedDate}?populate=createdBy`);
       console.log("API Response:", response.data);
 
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser?.name,
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
+      
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
@@ -68,7 +69,7 @@ const CustomScheduled = () => {
           "Failed to fetch leads. Please try again later."
       );
     }
-  }, [selectedDate, currentUser]);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchUser();

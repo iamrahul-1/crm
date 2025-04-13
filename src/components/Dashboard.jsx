@@ -103,7 +103,7 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
+
         // Get dates once
         const dates = calculateDates();
 
@@ -118,7 +118,7 @@ const Dashboard = () => {
           saturdayRes,
           sundayRes,
           missedRes,
-          favoriteRes
+          favoriteRes,
         ] = await Promise.all([
           api.get("/leads/all"),
           api.get(`/leads/potential/Hot`),
@@ -129,14 +129,15 @@ const Dashboard = () => {
           api.get(`/leads/schedule/custom/${dates.saturdayDate}`),
           api.get(`/leads/schedule/custom/${dates.sundayDate}`),
           api.get(`/leads/autostatus/missed`),
-          api.get(`/leads/status/favorite`)
+          api.get(`/leads/status/favorite`),
         ]);
 
         // Calculate lead counts
         const total = totalRes.data.totalLeads ?? 0;
         const todayLeads = todayRes.data.leads.length;
         const tomorrowLeads = tomorrowRes.data.leads.length;
-        const weekendLeads = saturdayRes.data.leads.length + sundayRes.data.leads.length;
+        const weekendLeads =
+          saturdayRes.data.leads.length + sundayRes.data.leads.length;
         const missed = missedRes.data.totalLeads ?? 0;
         const favorite = favoriteRes.data.totalLeads ?? 0;
 
@@ -202,7 +203,6 @@ const Dashboard = () => {
             },
           ],
         });
-
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         toast.error("Failed to fetch dashboard data");
@@ -377,21 +377,21 @@ const Dashboard = () => {
                   color="bg-green-600"
                   label="Today's Leads"
                   value={stats.today}
-                  onClick={() => navigate("/leads/today")}
+                  onClick={() => navigate("/leads/schedule/today")}
                 />
                 <StatCard
                   icon={FiClock}
                   color="bg-green-500"
                   label="Tomorrow's Leads"
                   value={stats.tomorrow}
-                  onClick={() => navigate("/leads/tomorrow")}
+                  onClick={() => navigate("/leads/schedule/tomorrow")}
                 />
                 <StatCard
                   icon={FiCalendar}
                   color="bg-purple-600"
                   label="Weekend Leads"
                   value={stats.weekend}
-                  onClick={() => navigate("/leads/weekend")}
+                  onClick={() => navigate("/leads/schedule/weekend")}
                 />
                 <StatCard
                   icon={FiAlertCircle}
@@ -405,7 +405,7 @@ const Dashboard = () => {
                   color="bg-yellow-600"
                   label="Favorite Leads"
                   value={stats.favorite}
-                  onClick={() => navigate("/leads/favorite")}
+                  onClick={() => navigate("/leads/favourite")}
                 />
               </div>
 
