@@ -16,7 +16,6 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
-import LoadingButton from "./LoadingButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -378,10 +377,73 @@ const Dashboard = () => {
           </h1>
 
           {loading ? (
-            <div className="flex items-center justify-center min-h-[400px]">
-              <LoadingButton isLoading={true} className="w-auto">
-                Loading...
-              </LoadingButton>
+            <div className="grid gap-6">
+              {/* Stats Grid Skeleton */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-sm p-6 animate-pulse">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                    <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Main Content Grid Skeleton */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Lead Types Skeleton */}
+                <div className="lg:col-span-4 bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                  </div>
+                  <div className="pt-8 space-y-4">
+                    {[...Array(3)].map((_, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                          <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        </div>
+                        <div className="w-7 h-7 bg-gray-200 rounded-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Charts Skeleton */}
+                <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[...Array(2)].map((_, index) => (
+                    <div key={index} className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                        <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                      </div>
+                      <div className="h-[280px] bg-gray-100 rounded-lg"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lead Status Section Skeleton */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                  <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </div>
+                      <div className="w-7 h-7 bg-gray-200 rounded-full"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="grid gap-6">
