@@ -17,7 +17,6 @@ const LeadStatus = ({ status }) => {
       const response = await api.get(`/leads/status/${status}?populate=createdBy`);
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
       setLeads(updatedLeads);
     } catch (error) {

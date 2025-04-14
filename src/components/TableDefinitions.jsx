@@ -39,7 +39,11 @@ export const getLeadTableColumns = ({
     accessor: "createdBy",
     render: (row) => (
       <div className="text-center">
-        {row.createdBy?.name || "Unknown"}
+        {row.createdBy ? (
+          <div>{row.createdBy.name}</div>
+        ) : (
+          "Unknown"
+        )}
       </div>
     ),
   },

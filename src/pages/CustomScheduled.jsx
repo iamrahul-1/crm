@@ -52,10 +52,12 @@ const CustomScheduled = () => {
       const response = await api.get(`/leads/schedule/custom/${formattedDate}?populate=createdBy`);
       console.log("API Response:", response.data);
 
-      const updatedLeads = response.data.leads.map((lead) => ({
-        ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
-      }));
+      const updatedLeads = response.data.leads.map((lead) => {
+        return {
+          ...lead,
+          createdBy: lead.createdBy || { name: 'Unknown' }
+        };
+      });
       
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -94,7 +96,6 @@ const CustomScheduled = () => {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy,
           };
         }
         return lead;
