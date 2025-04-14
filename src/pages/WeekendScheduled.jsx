@@ -91,10 +91,12 @@ const WeekendScheduled = () => {
       });
 
       console.log("Weekend leads:", allLeads);
-      const updatedLeads = allLeads.map((lead) => ({
-        ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
-      }));
+      const updatedLeads = allLeads.map((lead) => {
+        return {
+          ...lead,
+          createdBy: lead.createdBy || { name: 'Unknown' }
+        };
+      });
       
       // Calculate total pages based on combined leads
       const totalItems = allLeads.length;
@@ -140,7 +142,6 @@ const WeekendScheduled = () => {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy
           };
         }
         return lead;
@@ -173,7 +174,6 @@ const WeekendScheduled = () => {
           return {
             ...l,
             ...response.data.lead,
-            createdBy: l.createdBy, // Preserve the createdBy field
           };
         }
         return l;

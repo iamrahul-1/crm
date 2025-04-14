@@ -41,10 +41,7 @@ const Leads = () => {
         `/leads/all?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log(response.data);
-      const updatedLeads = response.data.leads.map((lead) => ({
-        ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
-      }));
+      const updatedLeads = response.data.leads.map((lead) => ({ ...lead }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
@@ -56,7 +53,7 @@ const Leads = () => {
           "Failed to fetch leads. Please try again later."
       );
     }
-  }, [currentPage, limit, searchQuery, currentUser]);
+  }, [currentPage, limit, searchQuery]);
 
   useEffect(() => {
     fetchUser();

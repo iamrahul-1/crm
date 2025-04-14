@@ -40,7 +40,6 @@ const MissedLeads = () => {
       );
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : currentUser.name,
       }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -51,7 +50,7 @@ const MissedLeads = () => {
       toast.error("Failed to fetch missed leads. Please try again later.");
       console.error(error);
     }
-  }, [currentPage, limit, searchQuery, currentUser]);
+  }, [currentPage, limit, searchQuery]);
 
   useEffect(() => {
     fetchUser();
@@ -73,7 +72,6 @@ const MissedLeads = () => {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy, // Preserve the createdBy field
           };
         }
         return lead;
@@ -134,7 +132,6 @@ const MissedLeads = () => {
           return {
             ...l,
             ...response.data.lead,
-            createdBy: l.createdBy, // Preserve the createdBy field
           };
         }
         return l;

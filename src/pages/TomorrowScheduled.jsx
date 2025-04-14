@@ -45,10 +45,12 @@ const TomorrowScheduled = () => {
         `/leads/schedule/custom/${formattedDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log("Tomorrow's leads:", response.data);
-      const updatedLeads = response.data.leads.map((lead) => ({
-        ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
-      }));
+      const updatedLeads = response.data.leads.map((lead) => {
+        return {
+          ...lead,
+          createdBy: lead.createdBy || { name: 'Unknown' }
+        };
+      });
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
@@ -84,7 +86,6 @@ const TomorrowScheduled = () => {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy
           };
         }
         return lead;
@@ -117,7 +118,6 @@ const TomorrowScheduled = () => {
           return {
             ...l,
             ...response.data.lead,
-            createdBy: l.createdBy, // Preserve the createdBy field
           };
         }
         return l;
