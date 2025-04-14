@@ -105,26 +105,35 @@ const Leads = () => {
     setViewingLead(row);
   };
 
-  const toggleFavorite = (id, lead) => {
-    const isFavorite = !lead.favourite;
+  const toggleFavorite = async (id, lead) => {
+    try {
+      const isFavorite = !lead.favourite;
+      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-    // Only update UI state
-    const updatedLeads = leads.map((l) => {
-      if (l._id === id) {
-        return {
-          ...l,
-          favourite: isFavorite,
-        };
-      }
-      return l;
-    });
-    setLeads(updatedLeads);
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((l) => {
+        if (l._id === id) {
+          return {
+            ...l,
+            ...response.data.lead,
+            createdBy: l.createdBy, // Preserve the createdBy field
+          };
+        }
+        return l;
+      });
 
-    // Show toast immediately
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`,
-    });
+      setLeads(updatedLeads);
+
+      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
+        type: isFavorite ? "success" : "info",
+        toastId: `favorite-${id}`,
+      });
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to update favorite status"
+      );
+      console.error(err);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -159,7 +168,7 @@ const Leads = () => {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">

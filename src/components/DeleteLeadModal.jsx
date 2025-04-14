@@ -18,7 +18,7 @@ const DeleteLeadModal = ({ onClose, onDelete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl transform transition-all">
+      <div className="bg-white rounded-2xl p-6 w-full-sm w-full mx-4 shadow-xl transform transition-all">
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
           <FiAlertCircle className="w-6 h-6 text-red-600" />
         </div>

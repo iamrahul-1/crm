@@ -36,21 +36,18 @@ const WeekendScheduled = () => {
       // Get weekend dates in YYYY-MM-DD format
       const today = new Date();
       const day = today.getDay();
-
+      
       // Calculate Saturday and Sunday dates
       let saturday, sunday;
-      if (day === 6) {
-        // Today is Saturday
+      if (day === 6) { // Today is Saturday
         saturday = new Date(today);
         sunday = new Date(today);
         sunday.setDate(sunday.getDate() + 1);
-      } else if (day === 0) {
-        // Today is Sunday
+      } else if (day === 0) { // Today is Sunday
         saturday = new Date(today);
         saturday.setDate(saturday.getDate() - 1);
         sunday = new Date(today);
-      } else {
-        // Any other day
+      } else { // Any other day
         const daysUntilSaturday = 6 - day;
         saturday = new Date(today);
         saturday.setDate(saturday.getDate() + daysUntilSaturday);
@@ -61,8 +58,8 @@ const WeekendScheduled = () => {
       // Format dates
       const formatWeekendDate = (date) => {
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
       };
 
@@ -78,11 +75,8 @@ const WeekendScheduled = () => {
       );
 
       // Combine leads from both days
-      const allLeads = [
-        ...saturdayResponse.data.leads,
-        ...sundayResponse.data.leads,
-      ];
-
+      const allLeads = [...saturdayResponse.data.leads, ...sundayResponse.data.leads];
+      
       // Sort by date and time
       allLeads.sort((a, b) => {
         const dateA = new Date(a.date);
@@ -99,14 +93,13 @@ const WeekendScheduled = () => {
       console.log("Weekend leads:", allLeads);
       const updatedLeads = allLeads.map((lead) => ({
         ...lead,
-        // Use createdBy name if available, otherwise fallback to current user's name
-        createdBy: lead.createdBy?.name || currentUser?.name || "Unknown",
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
-
+      
       // Calculate total pages based on combined leads
       const totalItems = allLeads.length;
       const totalPages = Math.ceil(totalItems / limit);
-
+      
       // Get current page leads
       const start = (currentPage - 1) * limit;
       const end = start + limit;
@@ -119,8 +112,7 @@ const WeekendScheduled = () => {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
       toast.error(
-        err.response?.data?.message ||
-          "Failed to fetch leads. Please try again later."
+        err.response?.data?.message || "Failed to fetch leads. Please try again later."
       );
     }
   }, [currentPage, limit, searchQuery]);
@@ -142,13 +134,13 @@ const WeekendScheduled = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-
+      
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
             ...lead,
             ...response.data.lead,
-            createdBy: lead.createdBy?.name || currentUser?.name || "Unknown",
+            createdBy: lead.createdBy
           };
         }
         return lead;
@@ -170,24 +162,35 @@ const WeekendScheduled = () => {
     setViewingLead(row);
   };
 
-  const toggleFavorite = (id, lead) => {
-    const isFavorite = !lead.favourite;
+  const toggleFavorite = async (id, lead) => {
+    try {
+      const isFavorite = !lead.favourite;
+      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-    const updatedLeads = leads.map((l) => {
-      if (l._id === id) {
-        return {
-          ...l,
-          favourite: isFavorite,
-        };
-      }
-      return l;
-    });
-    setLeads(updatedLeads);
+      // Find the lead in the current state and update it
+      const updatedLeads = leads.map((l) => {
+        if (l._id === id) {
+          return {
+            ...l,
+            ...response.data.lead,
+            createdBy: l.createdBy, // Preserve the createdBy field
+          };
+        }
+        return l;
+      });
 
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`,
-    });
+      setLeads(updatedLeads);
+
+      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
+        type: isFavorite ? "success" : "info",
+        toastId: `favorite-${id}`,
+      });
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to update favorite status"
+      );
+      console.error(err);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -211,17 +214,17 @@ const WeekendScheduled = () => {
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      (lead.name?.toLowerCase() || "").includes(searchLower) ||
-      String(lead.phone || "").includes(searchQuery) ||
-      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
-      (lead.remarks?.toLowerCase() || "").includes(searchLower)
+      (lead.name?.toLowerCase() || '').includes(searchLower) ||
+      String(lead.phone || '').includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || '').includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || '').includes(searchLower)
     );
   });
 
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">

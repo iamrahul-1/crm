@@ -11,17 +11,22 @@ import PropTypes from "prop-types";
 
 const LeadList = ({
   title,
-  leads = [],
+  leads: initialLeads = [],
   loading = false,
   params = {},
   filterFn = (lead) => true,
 }) => {
   const navigate = useNavigate();
+  const [leads, setLeads] = useState(initialLeads);
   const [editingLead, setEditingLead] = useState(null);
   const [viewingLead, setViewingLead] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -38,17 +43,13 @@ const LeadList = ({
 
   const handleEdit = async (updatedData) => {
     try {
-      const response = await api.put(`/leads/${editingLead._id}`, updatedData);
+      await api.put(`/leads/${editingLead._id}`, updatedData);
       setEditingLead(null);
       toast.success("Lead updated successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update lead");
       console.error(err);
     }
-  };
-
-  const handlePageChange = (newPage) => {
-    // No-op since pagination is handled by parent
   };
 
   const handleViewLead = (row) => {
@@ -58,13 +59,28 @@ const LeadList = ({
   const toggleFavorite = async (id, lead) => {
     try {
       const isFavorite = !lead.favourite;
-      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
+      
+      // Optimistic update
+      setLeads(prevLeads =>
+        prevLeads.map(l =>
+          l._id === id ? { ...l, favourite: isFavorite } : l
+        )
+      );
+
+      // API call
+      await api.put(`/leads/${id}`, { favourite: isFavorite });
 
       toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
         type: isFavorite ? "success" : "info",
         toastId: `favorite-${id}`,
       });
     } catch (err) {
+      // Revert on error
+      setLeads(prevLeads =>
+        prevLeads.map(l =>
+          l._id === id ? { ...l, favourite: !isFavorite } : l
+        )
+      );
       toast.error(
         err.response?.data?.message || "Failed to update favorite status"
       );
@@ -75,6 +91,7 @@ const LeadList = ({
   const handleDelete = async (id) => {
     try {
       await api.delete(`/leads/${id}`);
+      setLeads(prevLeads => prevLeads.filter(lead => lead._id !== id));
       setDeleteConfirm(null);
       toast.success("Lead deleted successfully");
     } catch (err) {
@@ -87,14 +104,15 @@ const LeadList = ({
     setEditingLead,
     setDeleteConfirm,
     toggleFavorite,
+    userRole: currentUser?.role,
   });
 
   const filteredLeads = leads.filter((lead) => {
     return (
-      (lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (lead.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         String(lead.phone).includes(searchQuery) ||
-        lead.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.remarks.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        lead.purpose?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.remarks?.toLowerCase().includes(searchQuery.toLowerCase())) &&
       filterFn(lead)
     );
   });
@@ -102,7 +120,7 @@ const LeadList = ({
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center justify-between w-full sm:w-auto">
@@ -139,6 +157,28 @@ const LeadList = ({
               </div>
             )}
           </div>
+
+          {editingLead && (
+            <EditLeadModal
+              lead={editingLead}
+              onClose={() => setEditingLead(null)}
+              onSave={handleEdit}
+            />
+          )}
+
+          {viewingLead && (
+            <ViewLeadModal
+              lead={viewingLead}
+              onClose={() => setViewingLead(null)}
+            />
+          )}
+
+          {deleteConfirm && (
+            <DeleteLeadModal
+              onConfirm={() => handleDelete(deleteConfirm)}
+              onCancel={() => setDeleteConfirm(null)}
+            />
+          )}
         </div>
       </div>
     </div>

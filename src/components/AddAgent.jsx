@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../services/api";
-import { FiUser, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiUser, FiEdit2} from "react-icons/fi";
 
 const AddAgent = () => {
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ const AddAgent = () => {
 
     // Prepare data to send - convert empty strings to null for optional fields
     const dataToSend = { ...formData };
-
+    
     // Convert phone numbers to numbers
     if (formData.phone) {
       dataToSend.phone = parseInt(formData.phone);
@@ -94,13 +94,7 @@ const AddAgent = () => {
     }
 
     // Remove empty optional fields
-    [
-      "companyRole",
-      "ownerName",
-      "ownerContact",
-      "designation",
-      "firmName",
-    ].forEach((field) => {
+    ['companyRole', 'ownerName', 'ownerContact', 'designation', 'firmName'].forEach(field => {
       if (dataToSend[field] === "") {
         delete dataToSend[field];
       }
@@ -108,13 +102,13 @@ const AddAgent = () => {
 
     setIsSubmitting(true);
     try {
-      console.log("Data being sent:", dataToSend);
+      console.log('Data being sent:', dataToSend);
       const response = await api.post("/cp", dataToSend);
-      console.log("API response:", response.data);
+      console.log('API response:', response.data);
       toast.success("Channel Partner added successfully");
       navigate("/cp");
     } catch (error) {
-      console.error("Error details:", error.response?.data);
+      console.error('Error details:', error.response?.data);
       toast.error(
         error.response?.data?.message || "Failed to add channel partner"
       );
@@ -158,7 +152,7 @@ const AddAgent = () => {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           <h1 className="text-2xl font-semibold text-gray-900 mb-8">
             Add New Channel Partner
           </h1>

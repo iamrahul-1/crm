@@ -39,7 +39,7 @@ const Header = () => {
           </h1>
 
           <div className="flex items-center gap-4">
-            {/* <Notification /> */}
+            <Notification />
           </div>
         </div>
       </div>
