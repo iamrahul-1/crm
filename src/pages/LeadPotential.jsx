@@ -23,6 +23,14 @@ const LeadPotential = ({ potential }) => {
     fetchLeads();
   }, [potential]);
 
+  const handleLeadUpdate = (updatedLead) => {
+    setLeads(prevLeads =>
+      prevLeads.map(lead =>
+        lead._id === updatedLead._id ? updatedLead : lead
+      )
+    );
+  };
+
   const title = {
     Hot: "Hot Leads",
     Warm: "Warm Leads",

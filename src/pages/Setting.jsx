@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  FiSearch,
-  FiUsers,
-  FiLock,
-  FiCheck,
-  FiUpload,
-} from "react-icons/fi";
-import { toast } from "react-toastify";
-import api from "../services/api";
-import Excel from "../components/Excel";
+import { FiSearch, FiDownload, FiUsers, FiLock, FiCheck } from "react-icons/fi";
 
 const Setting = () => {
   const [userList, setUserList] = useState([
@@ -30,17 +21,11 @@ const Setting = () => {
   const [filterRole, setFilterRole] = useState("all");
 
   const handleRoleChange = (userId, newRole) => {
-    setUserList((prevUsers) =>
-      prevUsers.map((user) =>
+    setUserList(prevUsers =>
+      prevUsers.map(user =>
         user.id === userId ? { ...user, role: newRole } : user
       )
     );
-  };
-
-  const handleExcelDataLoaded = (data) => {
-    // Handle the uploaded data here
-    console.log('Excel data loaded:', data);
-    // You can update the user list or show a success message
   };
 
   const filteredUsers = userList.filter((user) => {
@@ -56,13 +41,39 @@ const Setting = () => {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           <h1 className="text-2xl font-semibold text-gray-900 mb-8">
             System Settings
           </h1>
 
           <div className="grid gap-6">
-            <Excel onDataLoaded={handleExcelDataLoaded} />
+            {/* Export Section */}
+            <div className="bg-white rounded-lg p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-10 h-10 flex items-center justify-center bg-green-50 rounded-full">
+                  <FiDownload className="w-5 h-5 text-green-600" />
+                </div>
+                <h2 className="text-lg font-medium text-gray-900">Export Data</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    Select Data to Export
+                  </label>
+                  <select className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800">
+                    <option value="all">All Leads</option>
+                    <option value="monthly">Favorite Leads</option>
+                    <option value="weekly">Hot Leads</option>
+                    <option value="custom">Warm Leads</option>
+                    <option value="custom">Cold Leads</option>
+                  </select>
+                </div>
+                <button className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                  <FiDownload className="w-4 h-4" />
+                  Export
+                </button>
+              </div>
+            </div>
 
             {/* Role Management */}
             <div className="bg-white rounded-lg shadow-sm p-6">
@@ -70,9 +81,7 @@ const Setting = () => {
                 <div className="p-2.5 bg-blue-50 rounded-lg">
                   <FiUsers className="w-5 h-5 text-blue-600" />
                 </div>
-                <h2 className="text-base font-medium text-gray-800">
-                  Role Management
-                </h2>
+                <h2 className="text-base font-medium text-gray-800">Role Management</h2>
               </div>
 
               {/* Filter Section */}
@@ -104,43 +113,29 @@ const Setting = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100">
-                      <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
-                        Name
-                      </th>
-                      <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
-                        Email
-                      </th>
-                      <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">
-                        Role
-                      </th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Name</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Email</th>
+                      <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Role</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map((user) => (
                       <tr key={user.id} className="border-b border-gray-100">
                         <td className="py-3 px-6">
-                          <span className="text-sm text-gray-800">
-                            {user.name}
-                          </span>
+                          <span className="text-sm text-gray-800">{user.name}</span>
                         </td>
                         <td className="py-3 px-6">
-                          <span className="text-sm text-gray-600">
-                            {user.email}
-                          </span>
+                          <span className="text-sm text-gray-600">{user.email}</span>
                         </td>
                         <td className="py-3 px-6">
-                          <select
+                          <select 
                             className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800"
                             value={user.role}
-                            onChange={(e) =>
-                              handleRoleChange(user.id, e.target.value)
-                            }
+                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
                           >
                             <option value="Admin">Admin</option>
                             <option value="Manager">Manager</option>
-                            <option value="Channel Partner">
-                              Channel Partner
-                            </option>
+                            <option value="Channel Partner">Channel Partner</option>
                             <option value="Read Only">Read Only</option>
                           </select>
                         </td>
@@ -162,75 +157,41 @@ const Setting = () => {
                 <div className="p-2.5 bg-purple-50 rounded-lg">
                   <FiLock className="w-5 h-5 text-purple-600" />
                 </div>
-                <h2 className="text-base font-medium text-gray-800">
-                  Permission Settings
-                </h2>
+                <h2 className="text-base font-medium text-gray-800">Permission Settings</h2>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">
-                    Manager Access
-                  </h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-4">Manager Access</h3>
                   <div className="space-y-3">
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        defaultChecked
-                      />
-                      <span className="text-sm text-gray-700">
-                        View all leads
-                      </span>
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500" defaultChecked />
+                      <span className="text-sm text-gray-700">View all leads</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        defaultChecked
-                      />
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500" defaultChecked />
                       <span className="text-sm text-gray-700">Edit leads</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        defaultChecked
-                      />
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500" defaultChecked />
                       <span className="text-sm text-gray-700">Export data</span>
                     </label>
                   </div>
                 </div>
 
                 <div className="border-t pt-6 md:border-t-0 md:pt-0">
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">
-                    Channel Partner Access
-                  </h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-4">Channel Partner Access</h3>
                   <div className="space-y-3">
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        defaultChecked
-                      />
-                      <span className="text-sm text-gray-700">
-                        View assigned leads
-                      </span>
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500" defaultChecked />
+                      <span className="text-sm text-gray-700">View assigned leads</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                      />
-                      <span className="text-sm text-gray-700">
-                        Edit assigned leads
-                      </span>
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                      <span className="text-sm text-gray-700">Edit assigned leads</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                      />
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
                       <span className="text-sm text-gray-700">Export data</span>
                     </label>
                   </div>

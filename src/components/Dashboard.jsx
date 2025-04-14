@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { AgCharts } from "ag-charts-react";
 import {
   FiUsers,
@@ -28,6 +28,12 @@ const Dashboard = () => {
     weekend: 0,
     missed: 0,
     favorite: 0,
+    opened: 0,
+    inProgress: 0,
+    siteVisited: 0,
+    visitScheduled: 0,
+    closed: 0,
+    rejected: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -103,105 +109,121 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-
-        // Get dates once
         const dates = calculateDates();
 
-        // Combine all API calls into one Promise.all
-        const [
-          totalRes,
-          hotRes,
-          warmRes,
-          coldRes,
-          todayRes,
-          tomorrowRes,
-          saturdayRes,
-          sundayRes,
-          missedRes,
-          favoriteRes,
-        ] = await Promise.all([
+        // Split API calls into critical and non-critical data
+        // Critical data (fetch first)
+        const [totalRes, todayRes, missedRes, favoriteRes] = await Promise.all([
           api.get("/leads/all"),
-          api.get(`/leads/potential/Hot`),
-          api.get(`/leads/potential/Warm`),
-          api.get(`/leads/potential/Cold`),
           api.get(`/leads/schedule/custom/${dates.todayDate}`),
-          api.get(`/leads/schedule/custom/${dates.tomorrowDate}`),
-          api.get(`/leads/schedule/custom/${dates.saturdayDate}`),
-          api.get(`/leads/schedule/custom/${dates.sundayDate}`),
           api.get(`/leads/autostatus/missed`),
           api.get(`/leads/status/favorite`),
         ]);
 
-        // Calculate lead counts
-        const total = totalRes.data.totalLeads ?? 0;
-        const todayLeads = todayRes.data.leads.length;
-        const tomorrowLeads = tomorrowRes.data.leads.length;
-        const weekendLeads =
-          saturdayRes.data.leads.length + sundayRes.data.leads.length;
-        const missed = missedRes.data.totalLeads ?? 0;
-        const favorite = favoriteRes.data.totalLeads ?? 0;
+        // Update initial stats
+        setStats(prev => ({
+          ...prev,
+          total: totalRes.data.totalLeads ?? 0,
+          today: todayRes.data.leads.length,
+          missed: missedRes.data.totalLeads ?? 0,
+          favorite: favoriteRes.data.totalLeads ?? 0,
+        }));
 
-        // Update stats
-        setStats({
-          total,
-          today: todayLeads,
-          tomorrow: tomorrowLeads,
+        // Non-critical data (fetch after)
+        const [
+          tomorrowRes,
+          saturdayRes,
+          sundayRes,
+          hotRes,
+          warmRes,
+          coldRes,
+          openedRes,
+          inProgressRes,
+          visitScheduledRes,
+          visitedRes,
+          closedRes,
+          rejectedRes,
+        ] = await Promise.all([
+          api.get(`/leads/schedule/custom/${dates.tomorrowDate}`),
+          api.get(`/leads/schedule/custom/${dates.saturdayDate}`),
+          api.get(`/leads/schedule/custom/${dates.sundayDate}`),
+          api.get(`/leads/potential/Hot`),
+          api.get(`/leads/potential/Warm`),
+          api.get(`/leads/potential/Cold`),
+          api.get(`/leads/status/open`),
+          api.get(`/leads/status/inprogress`),
+          api.get(`/leads/status/sitevisitscheduled`),
+          api.get(`/leads/status/sitevisited`),
+          api.get(`/leads/status/closed`),
+          api.get(`/leads/status/rejected`),
+        ]);
+
+        const weekendLeads = saturdayRes.data.leads.length + sundayRes.data.leads.length;
+
+        // Update remaining stats
+        setStats(prev => ({
+          ...prev,
+          tomorrow: tomorrowRes.data.leads.length,
           weekend: weekendLeads,
-          missed,
-          favorite,
-        });
+          opened: openedRes.data.totalLeads ?? 0,
+          inProgress: inProgressRes.data.totalLeads ?? 0,
+          siteVisited: visitedRes.data.totalLeads ?? 0,
+          visitScheduled: visitScheduledRes.data.totalLeads ?? 0,
+          closed: closedRes.data.totalLeads ?? 0,
+          rejected: rejectedRes.data.totalLeads ?? 0,
+        }));
 
         // Update lead counts
         setLeadCounts({
           rejected: hotRes.data.leads.length,
           favourite: warmRes.data.leads.length,
           siteVisited: coldRes.data.leads.length,
-          today: todayLeads,
-          missed,
+          today: todayRes.data.leads.length,
+          missed: missedRes.data.totalLeads ?? 0,
           weekend: weekendLeads,
         });
 
         // Update chart data
+        const chartData1 = [
+          { asset: "Hot Lead", amount: hotRes.data.leads.length },
+          { asset: "Warm Lead", amount: warmRes.data.leads.length },
+          { asset: "Cold Lead", amount: coldRes.data.leads.length },
+        ];
+
+        const chartData2 = [
+          { asset: "Today", amount: todayRes.data.leads.length },
+          { asset: "Missed", amount: missedRes.data.totalLeads ?? 0 },
+          { asset: "Weekend", amount: weekendLeads },
+        ];
+
         setOptions1({
-          data: [
-            { asset: "Hot Lead", amount: hotRes.data.leads.length },
-            { asset: "Warm Lead", amount: warmRes.data.leads.length },
-            { asset: "Cold Lead", amount: coldRes.data.leads.length },
-          ],
-          series: [
-            {
-              type: "pie",
-              angleKey: "amount",
-              legendItemKey: "asset",
-              fills: ["#EF4444", "#F59E0B", "#3B82F6"],
-              tooltip: {
-                renderer: ({ datum }) => ({
-                  content: `${datum.asset}: ${datum.amount} leads`,
-                }),
-              },
+          data: chartData1,
+          series: [{
+            type: "pie",
+            angleKey: "amount",
+            legendItemKey: "asset",
+            fills: ["#EF4444", "#F59E0B", "#3B82F6"],
+            tooltip: {
+              renderer: ({ datum }) => ({
+                content: `${datum.asset}: ${datum.amount} leads`,
+              }),
             },
-          ],
+          }],
         });
 
         setOptions2({
-          data: [
-            { asset: "Today", amount: todayLeads },
-            { asset: "Missed", amount: missed },
-            { asset: "Weekend", amount: weekendLeads },
-          ],
-          series: [
-            {
-              type: "pie",
-              angleKey: "amount",
-              legendItemKey: "asset",
-              fills: ["#10B981", "#6B7280", "#EC4899"],
-              tooltip: {
-                renderer: ({ datum }) => ({
-                  content: `${datum.asset}: ${datum.amount} leads`,
-                }),
-              },
+          data: chartData2,
+          series: [{
+            type: "pie",
+            angleKey: "amount",
+            legendItemKey: "asset",
+            fills: ["#10B981", "#6B7280", "#EC4899"],
+            tooltip: {
+              renderer: ({ datum }) => ({
+                content: `${datum.asset}: ${datum.amount} leads`,
+              }),
             },
-          ],
+          }],
         });
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -290,7 +312,7 @@ const Dashboard = () => {
     ],
   };
 
-  const StatCard = ({ icon: Icon, color, label, value, onClick }) => (
+  const StatCard = memo(({ icon: Icon, color, label, value, onClick }) => (
     <button onClick={onClick} className="relative group">
       <div className="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center gap-4 mb-4">
@@ -304,17 +326,9 @@ const Dashboard = () => {
         </p>
       </div>
     </button>
-  );
+  ));
 
-  StatCard.propTypes = {
-    icon: PropTypes.elementType.isRequired,
-    color: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    value: PropTypes.number.isRequired,
-    onClick: PropTypes.func,
-  };
-
-  const LeadTypeCard = ({
+  const LeadTypeCard = memo(({
     icon: Icon,
     color,
     label,
@@ -337,7 +351,15 @@ const Dashboard = () => {
         <span className="text-white text-xs font-medium">{value}</span>
       </div>
     </div>
-  );
+  ));
+
+  StatCard.propTypes = {
+    icon: PropTypes.elementType.isRequired,
+    color: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    value: PropTypes.number.isRequired,
+    onClick: PropTypes.func,
+  };
 
   LeadTypeCard.propTypes = {
     icon: PropTypes.elementType.isRequired,
@@ -474,6 +496,62 @@ const Dashboard = () => {
                       <AgCharts options={options2} />
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Lead Status Section */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-blue-50 rounded-lg">
+                    <FiUsers className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-base font-medium text-gray-800">
+                    Lead Status
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <LeadTypeCard
+                    icon={FiClock}
+                    color="bg-gray-500"
+                    label="Opened"
+                    value={stats.opened}
+                    onClick={() => navigate('/leads/status/open')}
+                  />
+                  <LeadTypeCard
+                    icon={FiClock}
+                    color="bg-yellow-500"
+                    label="In Progress"
+                    value={stats.inProgress}
+                    onClick={() => navigate('/leads/status/in-progress')}
+                  />
+                  <LeadTypeCard
+                    icon={FiCalendar}
+                    color="bg-purple-500"
+                    label="Site Visit Scheduled"
+                    value={stats.visitScheduled}
+                    onClick={() => navigate('/leads/status/visit-scheduled')}
+                  />
+                  <LeadTypeCard
+                    icon={FiCalendar}
+                    color="bg-green-500"
+                    label="Site Visited"
+                    value={stats.siteVisited}
+                    onClick={() => navigate('/leads/status/visited')}
+                  />
+                  <LeadTypeCard
+                    icon={FiStar}
+                    color="bg-blue-500"
+                    label="Closed"
+                    value={stats.closed}
+                    onClick={() => navigate('/leads/status/closed')}
+                  />
+                  <LeadTypeCard
+                    icon={FiAlertCircle}
+                    color="bg-red-500"
+                    label="Rejected"
+                    value={stats.rejected}
+                    onClick={() => navigate('/leads/rejected')}
+                  />
                 </div>
               </div>
             </div>

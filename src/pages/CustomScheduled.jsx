@@ -54,8 +54,7 @@ const CustomScheduled = () => {
 
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        // Use createdBy name if available, otherwise fallback to current user's name
-        createdBy: lead.createdBy?.name || currentUser?.name || "Unknown",
+        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
       }));
       
       setLeads(updatedLeads);
@@ -70,7 +69,7 @@ const CustomScheduled = () => {
           "Failed to fetch leads. Please try again later."
       );
     }
-  }, [selectedDate, currentUser]);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchUser();
@@ -250,7 +249,7 @@ const CustomScheduled = () => {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Calendar Section */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center justify-between mb-6">

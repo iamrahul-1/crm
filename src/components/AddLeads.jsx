@@ -197,7 +197,7 @@ const AddLeads = () => {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="md:ml-64 pt-20 md:pt-28 px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           <h1 className="text-2xl font-semibold text-gray-900 mb-8">
             Add New Lead
           </h1>

@@ -4,7 +4,6 @@ import {
   FaTimes,
   FaTachometerAlt,
   FaUserFriends,
-  FaUser,
   FaCog,
   FaSignOutAlt,
   FaChevronDown,
