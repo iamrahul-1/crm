@@ -24,12 +24,16 @@ import TodayScheduled from "./pages/TodayScheduled";
 import WeekendScheduled from "./pages/WeekendScheduled";
 import TomorrowScheduled from "./pages/TomorrowScheduled";
 import CustomScheduled from "./pages/CustomScheduled";
+import LeadNotification from "./components/LeadNotifications";
 
 function App() {
   return (
     <div>
       <div className={"min-h-screen bg-gray-100 text-black"}>
         <Router>
+         
+            <LeadNotification />
+          
           <ToastContainer
             position="top-right"
             autoClose={3000}

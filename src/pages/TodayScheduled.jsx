@@ -44,12 +44,7 @@ const TodayScheduled = () => {
         `/leads/schedule/custom/${formattedDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log("Today's leads:", response.data);
-      const updatedLeads = response.data.leads.map((lead) => {
-        return {
-          ...lead,
-          createdBy: lead.createdBy || { name: 'Unknown' }
-        };
-      });
+      const updatedLeads = response.data.leads.map((lead) => ({ ...lead }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
