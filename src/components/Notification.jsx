@@ -16,20 +16,28 @@ const Notification = () => {
     try {
       const response = await api.get("/leads/tl");
       console.log("Raw API response:", response);
-      
-      if (!response.data || !response.data.leads || !Array.isArray(response.data.leads)) {
-        console.error("Invalid response format. Expected leads array in response.");
-        throw new Error("Invalid response format. Expected leads array in response.");
+
+      if (
+        !response.data ||
+        !response.data.leads ||
+        !Array.isArray(response.data.leads)
+      ) {
+        console.error(
+          "Invalid response format. Expected leads array in response."
+        );
+        throw new Error(
+          "Invalid response format. Expected leads array in response."
+        );
       }
 
       // Convert leads to notification format
-      const notifications = response.data.leads.map(lead => ({
+      const notifications = response.data.leads.map((lead) => ({
         id: lead.id,
         title: `New Lead: ${lead.name}`,
         message: `Phone: ${lead.phone}, Status: ${lead.status}`,
         time: new Date(lead.createdAt).toLocaleString(),
         read: false,
-        leadData: lead // Store the original lead data
+        leadData: lead, // Store the original lead data
       }));
 
       console.log("Converted notifications:", notifications);
@@ -45,14 +53,16 @@ const Notification = () => {
   const markAsRead = async (id) => {
     try {
       // Update the notification state
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => 
-          notification.id === id ? { ...notification, read: true } : notification
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification.id === id
+            ? { ...notification, read: true }
+            : notification
         )
       );
-      
+
       // Update unread count
-      setUnreadCount(prevCount => prevCount - 1);
+      setUnreadCount((prevCount) => prevCount - 1);
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -83,7 +93,7 @@ const Notification = () => {
                 <div
                   key={notification.id}
                   className={`flex items-start gap-3 p-3 border-b border-gray-200 ${
-                    notification.read ? 'bg-gray-50' : 'bg-white'
+                    notification.read ? "bg-gray-50" : "bg-white"
                   }`}
                 >
                   <div className="flex-shrink-0">
@@ -91,7 +101,9 @@ const Notification = () => {
                   </div>
                   <div className="flex-grow">
                     <p className="font-medium">{notification.title}</p>
-                    <p className="text-sm text-gray-500">{notification.message}</p>
+                    <p className="text-sm text-gray-500">
+                      {notification.message}
+                    </p>
                     <p className="text-xs text-gray-400">{notification.time}</p>
                   </div>
                   {!notification.read && (

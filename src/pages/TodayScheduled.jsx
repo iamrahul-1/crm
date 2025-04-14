@@ -44,10 +44,14 @@ const TodayScheduled = () => {
         `/leads/schedule/custom/${formattedDate}?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
       console.log("Today's leads:", response.data);
+
+      // Map the leads to ensure createdBy is properly formatted
       const updatedLeads = response.data.leads.map((lead) => ({
         ...lead,
-        createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown'
+        // Use createdBy name if available, otherwise fallback to current user's name
+        createdBy: lead.createdBy?.name || currentUser?.name || "Unknown",
       }));
+
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
@@ -59,7 +63,7 @@ const TodayScheduled = () => {
           "Failed to fetch leads. Please try again later."
       );
     }
-  }, [currentPage, limit, searchQuery]);
+  }, [currentPage, limit, searchQuery, currentUser]);
 
   useEffect(() => {
     fetchUser();
