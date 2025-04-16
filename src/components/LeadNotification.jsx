@@ -1,21 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
-import { AuthContext } from "../contexts/AuthContext.jsx";
 
 const LeadNotification = () => {
-  const { user } = React.useContext(AuthContext);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    // Only proceed if user is logged in
-    if (!user) return;
-
     // Load saved notifications from localStorage
     const savedNotifications = JSON.parse(
       localStorage.getItem("leadNotifications") || "[]"
     );
     setNotifications(savedNotifications);
-  }, [user]);
+  }, []);
 
   const handleClose = (notificationId) => {
     const now = new Date().getTime();
