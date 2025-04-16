@@ -1,7 +1,7 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { AuthProvider } from "./contexts/AuthContext";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import PieChart from "./components/Dashboard";
@@ -24,16 +24,15 @@ import TodayScheduled from "./pages/TodayScheduled";
 import WeekendScheduled from "./pages/WeekendScheduled";
 import TomorrowScheduled from "./pages/TomorrowScheduled";
 import CustomScheduled from "./pages/CustomScheduled";
-import LeadNotification from "./components/LeadNotifications";
+import LeadNotification from "./components/LeadNotification";
 
 function App() {
   return (
-    <div>
-      <div className={"min-h-screen bg-gray-100 text-black"}>
-        <Router>
-         
-            <LeadNotification />
-          
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-100 text-black">
+          <LeadNotification />
+
           <ToastContainer
             position="top-right"
             autoClose={3000}
@@ -62,7 +61,6 @@ function App() {
                       <Route path="/leads/add" element={<AddLeads />} />
                       <Route path="/leads/all" element={<Leads />} />
                       <Route path="/leads/new" element={<NewLeads />} />
-                      {/* <Route path="/profile" element={<Profile />} /> */}
                       <Route path="/settings" element={<Setting />} />
                       <Route path="/leads/missed" element={<MissedLeads />} />
                       <Route
@@ -147,9 +145,9 @@ function App() {
               }
             />
           </Routes>
-        </Router>
-      </div>
-    </div>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
