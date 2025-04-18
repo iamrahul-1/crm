@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -40,7 +40,6 @@ const Leads = () => {
       const response = await api.get(
         `/leads/all?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
-      console.log(response.data);
       const updatedLeads = response.data.leads.map((lead) => ({ ...lead }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
@@ -48,10 +47,9 @@ const Leads = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to fetch leads. Please try again later."
-      );
+      toast.error("Failed to fetch leads", {
+        description: err.response?.data?.message || "Please try again later",
+      });
     }
   }, [currentPage, limit, searchQuery]);
 

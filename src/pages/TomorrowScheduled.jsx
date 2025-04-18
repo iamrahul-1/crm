@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -37,8 +37,8 @@ const TomorrowScheduled = () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const year = tomorrow.getFullYear();
-      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-      const day = String(tomorrow.getDate()).padStart(2, '0');
+      const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+      const day = String(tomorrow.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
 
       const response = await api.get(
@@ -48,7 +48,7 @@ const TomorrowScheduled = () => {
       const updatedLeads = response.data.leads.map((lead) => {
         return {
           ...lead,
-          createdBy: lead.createdBy || { name: 'Unknown' }
+          createdBy: lead.createdBy || { name: "Unknown" },
         };
       });
       setLeads(updatedLeads);
@@ -58,7 +58,8 @@ const TomorrowScheduled = () => {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
       toast.error(
-        err.response?.data?.message || "Failed to fetch leads. Please try again later."
+        err.response?.data?.message ||
+          "Failed to fetch leads. Please try again later."
       );
     }
   }, [currentPage, limit, searchQuery]);
@@ -80,7 +81,7 @@ const TomorrowScheduled = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
+
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
           return {
@@ -158,10 +159,10 @@ const TomorrowScheduled = () => {
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      (lead.name?.toLowerCase() || '').includes(searchLower) ||
-      String(lead.phone || '').includes(searchQuery) ||
-      (lead.purpose?.toLowerCase() || '').includes(searchLower) ||
-      (lead.remarks?.toLowerCase() || '').includes(searchLower)
+      (lead.name?.toLowerCase() || "").includes(searchLower) ||
+      String(lead.phone || "").includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || "").includes(searchLower)
     );
   });
 

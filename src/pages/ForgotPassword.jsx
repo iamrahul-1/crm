@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "./../assets/logo.png";
 import api from "../services/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import { FiMail } from "react-icons/fi";
 
 const ForgotPassword = () => {
@@ -28,9 +28,13 @@ const ForgotPassword = () => {
     setIsLoading(true);
     try {
       await api.post("/auth/forgot-password", { email });
-      toast.success("Verification code has been sent to your email!");
+      toast.success("Email sent successfully", {
+        description: "Verification code has been sent to your email!",
+      });
     } catch (err) {
-      toast.error("Failed to send verification code. Please try again.");
+      toast.error("Failed to send code", {
+        description: "Please try again",
+      });
     } finally {
       setIsLoading(false);
     }

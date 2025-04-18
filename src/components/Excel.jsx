@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";  // Updated import
 import * as XLSX from "xlsx";
 import api from "../services/api";
 import { FiUpload, FiDownload } from "react-icons/fi";
@@ -29,11 +29,15 @@ const Excel = ({ onDataLoaded }) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       if (!selectedFile.name.endsWith(".xlsx")) {
-        toast.error("Please upload a valid Excel (.xlsx) file");
+        toast.error("Invalid file format", {
+          description: "Please upload a valid Excel (.xlsx) file"
+        });
         return;
       }
       if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("File size exceeds 10MB limit");
+        toast.error("File too large", {
+          description: "File size exceeds 10MB limit"
+        });
         return;
       }
       setFile(selectedFile);
@@ -127,7 +131,9 @@ const Excel = ({ onDataLoaded }) => {
         }
       });
 
-      toast.success('File uploaded successfully!');
+      toast.success("Upload complete", {
+        description: "File uploaded successfully!"
+      });
       onDataLoaded(response.data);
     } catch (err) {
       console.error('Upload error:', err);
@@ -160,7 +166,9 @@ const Excel = ({ onDataLoaded }) => {
       a.click();
       window.URL.revokeObjectURL(url);
       
-      toast.success('File downloaded successfully!');
+      toast.success("Export complete", {
+        description: "File downloaded successfully!"
+      });
     } catch (err) {
       console.error('Export error:', err);
       let errorMessage = 'Error exporting file. Please try again.';

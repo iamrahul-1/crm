@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../services/api";
 import EditCpModal from "../components/EditCpModal";
-import DeleteLeadModal from "../components/DeleteLeadModal";
+import DeleteCpModal from "../components/DeleteCpModal"; // Fixed import
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -15,7 +15,6 @@ const Agents = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [editingAgent, setEditingAgent] = useState(null);
-  const [viewingAgent, setViewingAgent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -69,7 +68,7 @@ const Agents = () => {
     try {
       setLeadListLoading(true);
       const response = await api.get(`/cp/${cpId}/leads`);
-      console.log('Lead list response:', response.data);
+      console.log("Lead list response:", response.data);
       setLeadListData(response.data.leads || []);
     } catch (error) {
       console.error("Error fetching lead list:", error);
@@ -80,7 +79,7 @@ const Agents = () => {
   }, []);
 
   const handleViewLeadList = (cpId) => {
-    console.log('Fetching leads for CP:', cpId);
+    console.log("Fetching leads for CP:", cpId);
     fetchLeadList(cpId);
     setViewingLeadList(cpId);
   };
@@ -113,7 +112,9 @@ const Agents = () => {
         )
       );
       setEditingAgent(null);
-      toast.success("Channel Partner updated successfully");
+      toast.success("Channel Partner updated successfully", {
+        description: "The changes have been saved",
+      });
     } catch (err) {
       toast.error(
         err.response?.data?.message || "Failed to update channel partner"
@@ -126,7 +127,9 @@ const Agents = () => {
     try {
       await api.delete(`/cp/${id}`);
       setAgents(agents.filter((agent) => agent._id !== id));
-      toast.success("Channel Partner deleted successfully");
+      toast.success("Channel Partner deleted successfully", {
+        description: "The CP has been permanently removed",
+      });
       setDeleteConfirm(null);
     } catch (err) {
       toast.error(
@@ -190,7 +193,7 @@ const Agents = () => {
           >
             <FiEdit2 size={18} />
           </button>
-          {currentUser?.role === 'admin' && (
+          {currentUser?.role === "admin" && (
             <button
               onClick={() => setDeleteConfirm(row._id)}
               className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
@@ -309,7 +312,9 @@ const Agents = () => {
       )}
 
       {deleteConfirm && (
-        <DeleteLeadModal
+        <DeleteCpModal
+          title="Delete Channel Partner"
+          message="Are you sure you want to delete this channel partner? This action cannot be undone."
           onClose={() => setDeleteConfirm(null)}
           onDelete={() => handleDeleteAgent(deleteConfirm)}
         />
@@ -327,8 +332,18 @@ const Agents = () => {
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -346,17 +361,19 @@ const Agents = () => {
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-gray-600 mb-4">Total leads: {leadListData.length}</p>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Total leads: {leadListData.length}
+                  </p>
                   <div className="space-y-4">
                     {leadListData.map((lead, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
                       >
                         <div className="p-4 flex items-center">
                           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-4">
                             <span className="text-lg font-semibold text-gray-800">
-                              {lead.name?.[0]?.toUpperCase() || 'L'}
+                              {lead.name?.[0]?.toUpperCase() || "L"}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -364,33 +381,68 @@ const Agents = () => {
                               <h3 className="text-lg font-semibold text-gray-900 truncate">
                                 {lead.name}
                               </h3>
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                lead.status === 'inprogress' ? 'bg-blue-100 text-blue-800' :
-                                lead.status === 'closed' ? 'bg-green-100 text-green-800' :
-                                lead.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${
+                                  lead.status === "inprogress"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : lead.status === "closed"
+                                    ? "bg-green-100 text-green-800"
+                                    : lead.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
                                 {lead.status}
                               </span>
                             </div>
                             <div className="flex items-center justify-between text-sm text-gray-600">
                               <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                <svg
+                                  className="w-4 h-4 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                                  />
                                 </svg>
-                                <span>{lead.phone || 'N/A'}</span>
+                                <span>{lead.phone || "N/A"}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg
+                                  className="w-4 h-4 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
                                 </svg>
-                                <span>{lead.purpose || 'N/A'}</span>
+                                <span>{lead.purpose || "N/A"}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg
+                                  className="w-4 h-4 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
                                 </svg>
-                                <span>{lead.budget || 'N/A'}</span>
+                                <span>{lead.budget || "N/A"}</span>
                               </div>
                             </div>
                           </div>

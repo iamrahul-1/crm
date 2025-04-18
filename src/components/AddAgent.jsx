@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
-import { FiUser, FiEdit2} from "react-icons/fi";
+import { FiUser, FiEdit2 } from "react-icons/fi";
 
 const AddAgent = () => {
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ const AddAgent = () => {
 
     // Prepare data to send - convert empty strings to null for optional fields
     const dataToSend = { ...formData };
-    
+
     // Convert phone numbers to numbers
     if (formData.phone) {
       dataToSend.phone = parseInt(formData.phone);
@@ -90,11 +90,17 @@ const AddAgent = () => {
 
     // Set companyRole to null if it's empty string
     if (dataToSend.companyRole === "") {
-      dataToSend.companyRole = null;
+      dataToSend.companyRole = undefined;
     }
 
     // Remove empty optional fields
-    ['companyRole', 'ownerName', 'ownerContact', 'designation', 'firmName'].forEach(field => {
+    [
+      "companyRole",
+      "ownerName",
+      "ownerContact",
+      "designation",
+      "firmName",
+    ].forEach((field) => {
       if (dataToSend[field] === "") {
         delete dataToSend[field];
       }
@@ -102,16 +108,26 @@ const AddAgent = () => {
 
     setIsSubmitting(true);
     try {
-      console.log('Data being sent:', dataToSend);
+      console.log("Form Data:", formData); // Log raw form data
+      console.log("Processed Data being sent:", dataToSend); // Log processed data
+      console.log("API Endpoint:", "/cp"); // Log endpoint
+
       const response = await api.post("/cp", dataToSend);
-      console.log('API response:', response.data);
-      toast.success("Channel Partner added successfully");
+      console.log("API Response:", response); // Log full response
+      console.log("Response Data:", response.data); // Log response data
+
+      toast.success("Channel Partner added successfully", {
+        description: "New channel partner has been created",
+      });
       navigate("/cp");
     } catch (error) {
-      console.error('Error details:', error.response?.data);
-      toast.error(
-        error.response?.data?.message || "Failed to add channel partner"
-      );
+      console.error("Error Object:", error); // Log full error object
+      console.error("Error Response:", error.response); // Log error response
+      console.error("Error Details:", error.response?.data); // Log error details
+
+      toast.error("Failed to add channel partner", {
+        description: error.response?.data?.message || "Please try again later",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "./Table";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../services/api";
 import EditLeadModal from "./EditLeadModal";
 import DeleteLeadModal from "./DeleteLeadModal";
@@ -13,7 +13,6 @@ const LeadList = ({
   title,
   leads: initialLeads = [],
   loading = false,
-  params = {},
   filterFn = (lead) => true,
 }) => {
   const navigate = useNavigate();
@@ -34,6 +33,9 @@ const LeadList = ({
       setCurrentUser(response.data);
     } catch (err) {
       console.error("Failed to fetch user:", err);
+      toast.error("Failed to fetch user details", {
+        description: "Some features may be limited"
+      });
     }
   }, []);
 
@@ -45,65 +47,89 @@ const LeadList = ({
     try {
       await api.put(`/leads/${editingLead._id}`, updatedData);
       setEditingLead(null);
-      toast.success("Lead updated successfully");
+      toast.success("Lead updated successfully", {
+        description: `${updatedData.name}'s information has been updated`
+      });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update lead");
+      toast.error("Failed to update lead", {
+        description: err.response?.data?.message || "Please try again"
+      });
       console.error(err);
     }
   };
 
-  const handleViewLead = (row) => {
-    setViewingLead(row);
+  const handleDelete = async (lead) => {
+    try {
+      await api.delete(`/leads/${lead._id}`);
+      setLeads((prevLeads) => prevLeads.filter((l) => l._id !== lead._id));
+      setDeleteConfirm(null);
+      toast.success("Lead deleted successfully", {
+        description: `${lead.name}'s record has been removed`
+      });
+    } catch (err) {
+      toast.error("Failed to delete lead", {
+        description: err.response?.data?.message || "Please try again"
+      });
+      console.error(err);
+    }
   };
 
-  const toggleFavorite = async (id, lead) => {
+  const handleToggleFavorite = async (lead) => {
+    const newFavoriteStatus = !lead.favourite;
     try {
-      const isFavorite = !lead.favourite;
-      
-      // Optimistic update
-      setLeads(prevLeads =>
-        prevLeads.map(l =>
-          l._id === id ? { ...l, favourite: isFavorite } : l
+      await api.put(`/leads/${lead._id}/favorite`, {
+        favourite: newFavoriteStatus,
+      });
+      setLeads((prevLeads) =>
+        prevLeads.map((l) =>
+          l._id === lead._id ? { ...l, favourite: newFavoriteStatus } : l
         )
       );
-
-      // API call
-      await api.put(`/leads/${id}`, { favourite: isFavorite });
-
-      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-        type: isFavorite ? "success" : "info",
-        toastId: `favorite-${id}`,
+      toast(newFavoriteStatus ? "Added to favorites" : "Removed from favorites", {
+        type: newFavoriteStatus ? "success" : "info",
+        description: `${lead.name} has been ${newFavoriteStatus ? 'added to' : 'removed from'} your favorites`
       });
     } catch (err) {
       // Revert on error
-      setLeads(prevLeads =>
-        prevLeads.map(l =>
-          l._id === id ? { ...l, favourite: !isFavorite } : l
+      setLeads((prevLeads) =>
+        prevLeads.map((l) =>
+          l._id === lead._id ? { ...l, favourite: !newFavoriteStatus } : l
         )
       );
-      toast.error(
-        err.response?.data?.message || "Failed to update favorite status"
-      );
+      toast.error("Failed to update favorite status", {
+        description: err.response?.data?.message || "Please try again"
+      });
       console.error(err);
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await api.delete(`/leads/${id}`);
-      setLeads(prevLeads => prevLeads.filter(lead => lead._id !== id));
-      setDeleteConfirm(null);
-      toast.success("Lead deleted successfully");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete lead");
-    }
+  const handleSearch = useCallback(
+    (query) => {
+      setSearchQuery(query);
+      if (!query) {
+        setLeads(initialLeads);
+        return;
+      }
+
+      const searchResults = initialLeads.filter((lead) => {
+        const searchStr = `${lead.name} ${lead.phone} ${lead.purpose} ${lead.requirement} ${lead.source}`.toLowerCase();
+        return searchStr.includes(query.toLowerCase());
+      });
+
+      setLeads(searchResults);
+    },
+    [initialLeads]
+  );
+
+  const handleViewLead = (row) => {
+    setViewingLead(row);
   };
 
   const columns = getLeadTableColumns({
     handleViewLead,
     setEditingLead,
     setDeleteConfirm,
-    toggleFavorite,
+    handleToggleFavorite,
     userRole: currentUser?.role,
   });
 
@@ -132,7 +158,7 @@ const LeadList = ({
                   type="text"
                   placeholder={`Search ${title.toLowerCase()}...`}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
@@ -175,8 +201,9 @@ const LeadList = ({
 
           {deleteConfirm && (
             <DeleteLeadModal
-              onConfirm={() => handleDelete(deleteConfirm)}
-              onCancel={() => setDeleteConfirm(null)}
+              onClose={() => setDeleteConfirm(null)}
+              onDelete={() => handleDelete(deleteConfirm)}
+              leadName={deleteConfirm.name}
             />
           )}
         </div>
@@ -189,7 +216,6 @@ LeadList.propTypes = {
   title: PropTypes.string.isRequired,
   leads: PropTypes.arrayOf(PropTypes.object).isRequired,
   loading: PropTypes.bool.isRequired,
-  params: PropTypes.object,
   filterFn: PropTypes.func,
 };
 

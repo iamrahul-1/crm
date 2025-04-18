@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Navigation from "./Navigation";
 import logo from "./../assets/logo.png";
 import Notification from "./Notification";
@@ -34,16 +34,18 @@ const Header = () => {
             </div>
           </button>
 
-          <h1 className="flex items-center gap-4 text-2xl md:text-4xl mx-auto font-bold text-gray-800">
-            <img className="h-11 md:h-20 w-auto" src={logo} alt="Logo" />
-          </h1>
+          {/* Logo */}
+          <div className="flex items-center">
+            <img src={logo} alt="CRM Logo" className="h-8 w-auto" />
+          </div>
 
-          <div className="flex items-center gap-4">
+          {/* Navigation */}
+          <div className="flex items-center">
             <Notification />
+            <Navigation isOpen={isOpen} />
           </div>
         </div>
       </div>
-      <Navigation isOpen={isOpen} toggleMenu={() => setIsOpen(!isOpen)} />
     </header>
   );
 };

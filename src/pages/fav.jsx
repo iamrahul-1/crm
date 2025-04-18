@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { FiSearch } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -47,7 +47,9 @@ const FavoriteLeads = () => {
     } catch (error) {
       setError("Failed to fetch favorite leads");
       setLoading(false);
-      toast.error("Failed to fetch favorite leads. Please try again later.");
+      toast.error("Failed to fetch favorite leads", {
+        description: "Please try again later",
+      });
       console.error(error);
     }
   }, [currentPage, limit, searchQuery]);

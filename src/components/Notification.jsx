@@ -1,140 +1,231 @@
 import React, { useState, useEffect } from "react";
 import { BellIcon } from "@heroicons/react/24/outline";
-import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
-import axios from "axios";
-import { toast } from "react-toastify";
-import getEnvConfig from "../config/env";
-
-const { apiUrl } = getEnvConfig();
-const api = axios.create({
-  baseURL: apiUrl,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 15000,
-});
-
-// Add token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    toast.error("Request failed to send");
-    return Promise.reject(error);
-  }
-);
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import { toast } from "sonner";
+import api from "../services/api";
 
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
-  const [reminderNotifications, setReminderNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
 
-  useEffect(() => {
-    fetchNotifications();
-    fetchReminders();
-  }, []);
-
+  // Fetch only notifications
   const fetchNotifications = async () => {
     try {
       const response = await api.get("/notifications/");
-      console.log("Raw API response:", response);
-
-      if (!response.data || !Array.isArray(response.data)) {
-        console.error(
-          "Invalid response format. Expected notifications array in response."
-        );
-        throw new Error(
-          "Invalid response format. Expected notifications array in response."
-        );
-      }
-
-      const notifications = response.data.map((notification) => ({
+      const notifications = response.data.map(notification => ({
         id: notification._id,
         message: notification.message,
         leadData: notification.leadId,
         isRead: notification.isRead,
         isMinimized: notification.isMinimized,
         minimizedUntil: notification.minimizedUntil,
-        createdAt: notification.createdAt,
+        createdAt: notification.createdAt
       }));
 
-      console.log("Converted notifications:", notifications);
-      setNotifications(notifications);
-      setUnreadCount(notifications.filter((n) => !n.isRead).length);
+      // Sort by creation date
+      const sortedNotifications = notifications.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      setNotifications(sortedNotifications);
+      setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
     } catch (error) {
       console.error("Error fetching notifications:", error);
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  };
-
-  const fetchReminders = async () => {
-    try {
-      const response = await api.get("/notifications/reminders");
-      console.log("Reminder response:", response.data);
-      setReminderNotifications(response.data);
-    } catch (error) {
-      console.error("Error fetching reminders:", error);
-      toast.error(error.response?.data?.message || "Failed to fetch reminders");
+      toast.error("Failed to fetch notifications", {
+        description: error.response?.data?.message || "Please try again"
+      });
     }
   };
 
   useEffect(() => {
-    if (!isNotificationEnabled) return;
-
-    fetchReminders();
-    const interval = setInterval(fetchReminders, 20000);
+    fetchNotifications();
+    // Poll for new notifications every minute
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
-  }, [isNotificationEnabled]);
+  }, []);
 
-  const markAsRead = async (id) => {
+  const handleMarkAsRead = async (id) => {
     try {
       await api.put(`/notifications/${id}/read`);
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((notification) =>
+      setNotifications(prev => 
+        prev.map(notification =>
+          notification.id === id ? { ...notification, isRead: true } : notification
+        )
+      );
+      setUnreadCount(prev => prev - 1);
+      toast.success("Notification marked as read");
+    } catch (error) {
+      toast.error("Failed to mark notification as read", {
+        description: error.response?.data?.message || "Please try again"
+      });
+    }
+  };
+
+  const handleClose = async (id) => {
+    try {
+      const now = new Date().getTime();
+      await api.put(`/notifications/${id}/minimize`);
+      setNotifications(prev =>
+        prev.map(notification =>
           notification.id === id
-            ? { ...notification, isRead: true }
+            ? { ...notification, isMinimized: true, minimizedUntil: now + 30000 }
             : notification
         )
       );
-      setUnreadCount((prevCount) => prevCount - 1);
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      toast.error("Failed to minimize notification", {
+        description: error.response?.data?.message || "Please try again"
+      });
     }
   };
 
-  const handleClearNotification = async (id) => {
+  const handleClear = async (id) => {
     try {
       await api.delete(`/notifications/${id}`);
-      setNotifications((prevNotifications) =>
-        prevNotifications.filter((notification) => notification.id !== id)
-      );
-      setUnreadCount((prevCount) => prevCount - 1);
+      setNotifications(prev => prev.filter(notification => notification.id !== id));
+      setUnreadCount(prev => prev - 1);
+      toast.success("Notification cleared");
     } catch (error) {
-      console.error("Error clearing notification:", error);
+      toast.error("Failed to clear notification", {
+        description: error.response?.data?.message || "Please try again"
+      });
     }
   };
 
-  const handleMarkReminderAsRead = async (notificationId) => {
-    try {
-      await api.delete(`/notifications/${notificationId}`);
-      const updatedNotifications = reminderNotifications.filter(
-        (notification) => notification._id !== notificationId
-      );
-      setReminderNotifications(updatedNotifications);
-    } catch (error) {
-      console.error("Error marking reminder as read:", error);
-    }
+  const renderNotification = (notification) => {
+    const now = new Date().getTime();
+    const isHidden = notification.isMinimized && 
+                    notification.minimizedUntil && 
+                    now <= notification.minimizedUntil;
+
+    if (isHidden) return null;
+
+    const bgColor = notification.isRead ? "bg-gray-50" : "bg-white";
+    const borderColor = notification.isRead ? "border-gray-200" : "border-blue-200";
+
+    // Get formatted date and time
+    const notificationDate = new Date(notification.createdAt);
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    };
+    const formattedDate = notificationDate.toLocaleDateString('en-IN', options);
+    const timeAgo = calculateTimeAgo(notificationDate);
+
+    return (
+      <div key={notification.id} className={`flex items-start gap-3 p-4 rounded-lg border ${bgColor} ${borderColor}`}>
+        <div className="flex-shrink-0">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            notification.isRead ? "bg-blue-100" : "bg-blue-200"
+          }`}>
+            <CheckCircleIcon className={`w-5 h-5 ${notification.isRead ? "text-blue-500" : "text-blue-600"}`} />
+          </div>
+        </div>
+        <div className="flex-grow">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-medium text-gray-900">
+              {notification.leadData?.name || "Unknown Lead"}
+            </h3>
+            <div className="flex flex-col items-end">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                notification.isRead ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-600"
+              }`}>
+                {notification.isRead ? "Read" : "New"}
+              </span>
+              <span className="text-xs text-gray-500 mt-1">
+                {timeAgo}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold text-gray-900">Date:</span>
+                <span className="text-lg font-semibold text-gray-900">{formattedDate}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold text-gray-900">Time:</span>
+                <span className="text-lg font-semibold text-gray-900">
+                  {notificationDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {notification.leadData?.status && (
+                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                  Status: {notification.leadData.status}
+                </span>
+              )}
+              {notification.leadData?.purpose && (
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
+                  Purpose: {notification.leadData.purpose}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => handleClose(notification.id)}
+            className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-800 flex items-center gap-1"
+            title="Minimize"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 10a7 7 0 110-14 7 7 0 010 14z" />
+            </svg>
+            Minimize
+          </button>
+          {!notification.isRead && (
+            <button
+              onClick={() => handleMarkAsRead(notification.id)}
+              className="text-xs px-3 py-1.5 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-800 flex items-center gap-1"
+              title="Mark as read"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Read
+            </button>
+          )}
+          <button
+            onClick={() => handleClear(notification.id)}
+            className="text-xs px-3 py-1.5 bg-red-100 hover:bg-red-200 rounded-lg text-red-800 flex items-center gap-1"
+            title="Delete"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    );
   };
 
-  const totalUnreadCount = unreadCount + reminderNotifications.length;
+  // Helper function to calculate time ago
+  const calculateTimeAgo = (date) => {
+    const now = new Date();
+    const diff = now - date;
+    
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes}m ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks}w ago`;
+    
+    return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
 
   return (
     <div className="relative">
@@ -143,114 +234,37 @@ const Notification = () => {
         className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
       >
         <BellIcon className="w-6 h-6" />
-        {totalUnreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-            {totalUnreadCount}
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-2.5 py-1 rounded-full">
+            {unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 max-h-[80vh] overflow-y-auto">
+        <div className="absolute right-0 top-12 w-96 bg-white rounded-xl shadow-xl border border-gray-100 max-h-[80vh] overflow-y-auto">
           <div className="p-4">
-            <h3 className="text-lg font-semibold mb-4">Notifications</h3>
-
-            {/* Reminder Notifications */}
-            {reminderNotifications.map((notification) => {
-              const now = new Date().getTime();
-              const isHidden =
-                notification.isMinimized &&
-                (!notification.minimizedUntil ||
-                  now <= notification.minimizedUntil);
-              return (
-                !isHidden && (
-                  <div
-                    key={notification._id}
-                    className="flex items-start gap-3 p-3 border-b border-gray-200 bg-yellow-50"
-                  >
-                    <div className="flex-shrink-0">
-                      <ClockIcon className="w-6 h-6 text-yellow-500" />
-                    </div>
-                    <div className="flex-grow">
-                      <p className="font-medium">
-                        Reminder: {notification.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Purpose: {notification.purpose || "Not specified"}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Time: {notification.time || "Not specified"}
-                      </p>
-                      {notification.remarks && (
-                        <p className="text-sm text-gray-500">
-                          Remarks: {notification.remarks}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => handleCloseReminder(notification._id)}
-                        className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
-                      >
-                        Close
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleMarkReminderAsRead(notification._id)
-                        }
-                        className="text-xs px-2 py-1 bg-blue-500 text-white hover:bg-blue-600 rounded"
-                      >
-                        Mark as Read
-                      </button>
-                    </div>
-                  </div>
-                )
-              );
-            })}
-
-            {/* Lead Notifications */}
-            {notifications.length === 0 &&
-            reminderNotifications.length === 0 ? (
-              <p className="text-gray-500">No lead notifications</p>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {notifications.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3v2.25M21 6a9 9 0 11-18 0 9 9 0 0118 0zM12 18.75h.007v.008H12v-.008z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
+                <p className="mt-1 text-sm text-gray-500">You have no new notifications.</p>
+              </div>
             ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`flex items-start gap-3 p-3 border-b border-gray-200 ${
-                    notification.read ? "bg-gray-50" : "bg-white"
-                  }`}
-                >
-                  <div className="flex-shrink-0">
-                    <CheckCircleIcon className="w-6 h-6 text-green-500" />
-                  </div>
-                  <div className="flex-grow">
-                    <p className="font-medium">{notification.title}</p>
-                    <p className="text-sm text-gray-500">
-                      {notification.message}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Status: {notification.leadData?.status || "Not specified"}
-                    </p>
-                    <p className="text-xs text-gray-400">{notification.time}</p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {!notification.isRead && (
-                      <button
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-xs px-2 py-1 bg-blue-500 text-white hover:bg-blue-600 rounded"
-                      >
-                        Mark as read
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleClearNotification(notification.id)}
-                      className="text-xs px-2 py-1 bg-red-500 text-white hover:bg-red-600 rounded"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              ))
+              notifications.map(renderNotification)
             )}
           </div>
         </div>

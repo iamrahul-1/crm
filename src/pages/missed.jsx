@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { FiSearch } from "react-icons/fi";
-import { toast } from "react-toastify";
+// Remove this line as it's duplicated
+// import { toast } from "react-toastify";
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
 import ViewLeadModal from "../components/ViewLeadModal";
 import { getLeadTableColumns } from "../components/TableDefinitions";
+import { toast } from "sonner"; // Keep only this import
 
 const MissedLeads = () => {
   const navigate = useNavigate();
@@ -38,16 +40,16 @@ const MissedLeads = () => {
       const response = await api.get(
         `/leads/autostatus/missed?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
-      const updatedLeads = response.data.leads.map((lead) => ({
-        ...lead,
-      }));
+      const updatedLeads = response.data.leads.map((lead) => ({ ...lead }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
     } catch (error) {
       setError("Failed to fetch missed leads");
       setLoading(false);
-      toast.error("Failed to fetch missed leads. Please try again later.");
+      toast.error("Failed to fetch missed leads", {
+        description: "Please try again later",
+      });
       console.error(error);
     }
   }, [currentPage, limit, searchQuery]);

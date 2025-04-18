@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from "react";
 import Table from "./Table";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "./EditLeadModal";
 import DeleteLeadModal from "./DeleteLeadModal";
@@ -30,9 +30,13 @@ const SimpleLeadList = ({ leads, loading }) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
       setEditingLead(null);
-      toast.success("Lead updated successfully");
+      toast.success("Lead updated successfully", {
+        description: "Changes have been saved",
+      });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update lead");
+      toast.error("Failed to update lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
       console.error(err);
     }
   };
@@ -44,16 +48,17 @@ const SimpleLeadList = ({ leads, loading }) => {
   const toggleFavorite = async (id, lead) => {
     try {
       const isFavorite = !lead.favourite;
-      const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
+      await api.put(`/leads/${id}`, { favourite: isFavorite });
 
-      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-        type: isFavorite ? "success" : "info",
-        toastId: `favorite-${id}`,
-      });
+      if (isFavorite) {
+        toast.success("Added to favorites");
+      } else {
+        toast.info("Removed from favorites");
+      }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to update favorite status"
-      );
+      toast.error("Failed to update favorite status", {
+        description: err.response?.data?.message || "Please try again",
+      });
       console.error(err);
     }
   };
@@ -62,9 +67,13 @@ const SimpleLeadList = ({ leads, loading }) => {
     try {
       await api.delete(`/leads/${id}`);
       setDeleteConfirm(null);
-      toast.success("Lead deleted successfully");
+      toast.success("Lead deleted successfully", {
+        description: "The lead has been permanently removed",
+      });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete lead");
+      toast.error("Failed to delete lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
   };
 

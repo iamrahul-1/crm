@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import api from "../services/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 
 const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
   // Ensure lead data has default values
@@ -61,7 +61,9 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
       setApiData(response.data);
     } catch (error) {
       console.error("Failed to fetch lead data:", error);
-      toast.error("Failed to load lead data");
+      toast.error("Failed to load lead data", {
+        description: "Please try again later",
+      });
     }
   }, [lead._id]);
 
@@ -124,7 +126,10 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
 
       // Remove empty fields except for time which should be sent as empty string if not set
       Object.keys(dataToSend).forEach((key) => {
-        if (key !== "time" && (dataToSend[key] === "" || dataToSend[key] === null)) {
+        if (
+          key !== "time" &&
+          (dataToSend[key] === "" || dataToSend[key] === null)
+        ) {
           delete dataToSend[key];
         }
       });
@@ -146,13 +151,17 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
 
       if (response.data) {
         setFormData(response.data);
-        toast.success("Lead updated successfully");
+        toast.success("Lead updated successfully", {
+          description: "All changes have been saved",
+        });
         onClose(); // Close the modal after successful save
         onRefresh(); // Refresh the leads list
         setHasChanges(false);
       }
     } catch (error) {
-      toast.error("Failed to update lead");
+      toast.error("Failed to update lead", {
+        description: error.response?.data?.message || "Please try again later",
+      });
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -392,7 +401,8 @@ const ViewLeadModal = ({ lead, onClose, onRefresh }) => {
                     >
                       <p className="text-sm text-gray-900">{remark.remark}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatDate(remark.createdAt)}
+                        {formatDate(remark.createdAt)} at{" "}
+                        {formatTime(remark.createdAt?.split("T")[1])}
                       </p>
                     </div>
                   ))}

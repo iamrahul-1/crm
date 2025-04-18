@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import { FiSearch } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -42,20 +42,16 @@ const NewLeads = () => {
       const response = await api.get(
         `/leads/autostatus/new?page=${currentPage}&limit=${limit}&search=${searchQuery}&populate=createdBy`
       );
-      console.log(response.data);
-      const updatedLeads = response.data.leads.map((lead) => ({
-        ...lead,
-      }));
+      const updatedLeads = response.data.leads.map((lead) => ({ ...lead }));
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to fetch leads. Please try again later."
-      );
+      toast.error("Failed to fetch leads", {
+        description: err.response?.data?.message || "Please try again later",
+      });
     }
   }, [currentPage, limit, searchQuery]);
 

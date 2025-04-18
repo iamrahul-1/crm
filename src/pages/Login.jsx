@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "./../assets/logo.png";
 import api from "../services/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 
 const Login = () => {

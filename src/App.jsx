@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "sonner";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import PieChart from "./components/Dashboard";
@@ -23,26 +22,14 @@ import TodayScheduled from "./pages/TodayScheduled";
 import WeekendScheduled from "./pages/WeekendScheduled";
 import TomorrowScheduled from "./pages/TomorrowScheduled";
 import CustomScheduled from "./pages/CustomScheduled";
-import LeadNotification from "./components/LeadNotification";
+import Notification from "./components/Notification";
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100 text-black">
-        <LeadNotification />
-
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
+        <Notification />
+        <Toaster richColors position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -66,10 +53,7 @@ function App() {
                       element={<FavoriteLeads />}
                     />
                     <Route path="/cp" element={<Agents />} />
-                    <Route
-                      path="/leads/rejected"
-                      element={<RejectedLeads />}
-                    />
+                    <Route path="/leads/rejected" element={<RejectedLeads />} />
                     <Route path="/cp/add" element={<AddAgent />} />
 
                     {/* Lead Potential Routes */}

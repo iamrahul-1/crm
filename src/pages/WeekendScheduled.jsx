@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -36,18 +36,21 @@ const WeekendScheduled = () => {
       // Get weekend dates in YYYY-MM-DD format
       const today = new Date();
       const day = today.getDay();
-      
+
       // Calculate Saturday and Sunday dates
       let saturday, sunday;
-      if (day === 6) { // Today is Saturday
+      if (day === 6) {
+        // Today is Saturday
         saturday = new Date(today);
         sunday = new Date(today);
         sunday.setDate(sunday.getDate() + 1);
-      } else if (day === 0) { // Today is Sunday
+      } else if (day === 0) {
+        // Today is Sunday
         saturday = new Date(today);
         saturday.setDate(saturday.getDate() - 1);
         sunday = new Date(today);
-      } else { // Any other day
+      } else {
+        // Any other day
         const daysUntilSaturday = 6 - day;
         saturday = new Date(today);
         saturday.setDate(saturday.getDate() + daysUntilSaturday);
@@ -58,8 +61,8 @@ const WeekendScheduled = () => {
       // Format dates
       const formatWeekendDate = (date) => {
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       };
 
@@ -75,8 +78,11 @@ const WeekendScheduled = () => {
       );
 
       // Combine leads from both days
-      const allLeads = [...saturdayResponse.data.leads, ...sundayResponse.data.leads];
-      
+      const allLeads = [
+        ...saturdayResponse.data.leads,
+        ...sundayResponse.data.leads,
+      ];
+
       // Sort by date and time
       allLeads.sort((a, b) => {
         const dateA = new Date(a.date);
@@ -94,14 +100,14 @@ const WeekendScheduled = () => {
       const updatedLeads = allLeads.map((lead) => {
         return {
           ...lead,
-          createdBy: lead.createdBy || { name: 'Unknown' }
+          createdBy: lead.createdBy || { name: "Unknown" },
         };
       });
-      
+
       // Calculate total pages based on combined leads
       const totalItems = allLeads.length;
       const totalPages = Math.ceil(totalItems / limit);
-      
+
       // Get current page leads
       const start = (currentPage - 1) * limit;
       const end = start + limit;
@@ -113,9 +119,9 @@ const WeekendScheduled = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
-      toast.error(
-        err.response?.data?.message || "Failed to fetch leads. Please try again later."
-      );
+      toast.error("Failed to fetch leads", {
+        description: err.response?.data?.message || "Please try again later",
+      });
     }
   }, [currentPage, limit, searchQuery]);
 
@@ -136,59 +142,39 @@ const WeekendScheduled = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-      
-      const updatedLeads = leads.map((lead) => {
-        if (lead._id === editingLead._id) {
-          return {
-            ...lead,
-            ...response.data.lead,
-          };
-        }
-        return lead;
-      });
-
+      const updatedLeads = leads.map((lead) =>
+        lead._id === editingLead._id ? { ...lead, ...response.data.lead } : lead
+      );
       setLeads(updatedLeads);
       setEditingLead(null);
-      toast.success("Lead updated successfully");
+      toast.success("Lead updated successfully", {
+        description: "Changes have been saved",
+      });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update lead");
+      toast.error("Failed to update lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-  };
-
-  const handleViewLead = (row) => {
-    setViewingLead(row);
   };
 
   const toggleFavorite = async (id, lead) => {
     try {
       const isFavorite = !lead.favourite;
       const response = await api.put(`/leads/${id}`, { favourite: isFavorite });
-
-      // Find the lead in the current state and update it
-      const updatedLeads = leads.map((l) => {
-        if (l._id === id) {
-          return {
-            ...l,
-            ...response.data.lead,
-          };
-        }
-        return l;
-      });
-
+      const updatedLeads = leads.map((l) =>
+        l._id === id ? { ...l, ...response.data.lead } : l
+      );
       setLeads(updatedLeads);
 
-      toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-        type: isFavorite ? "success" : "info",
-        toastId: `favorite-${id}`,
-      });
+      if (isFavorite) {
+        toast.success("Added to favorites");
+      } else {
+        toast.info("Removed from favorites");
+      }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to update favorite status"
-      );
+      toast.error("Failed to update favorite status", {
+        description: err.response?.data?.message || "Please try again",
+      });
       console.error(err);
     }
   };
@@ -197,15 +183,26 @@ const WeekendScheduled = () => {
     try {
       await api.delete(`/leads/${id}`);
       setLeads(leads.filter((lead) => lead._id !== id));
-      toast.success("Lead deleted successfully");
+      toast.success("Lead deleted successfully", {
+        description: "The lead has been permanently removed",
+      });
       setDeleteConfirm(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete lead");
+      toast.error("Failed to delete lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
   };
 
+  // Add setViewingLead to the getLeadTableColumns call
+  // Add handleViewLead function
+  const handleViewLead = (row) => {
+    setViewingLead(row);
+  };
+
+  // Update the columns definition
   const columns = getLeadTableColumns({
-    handleViewLead,
+    handleViewLead, // Add this
     setEditingLead,
     setDeleteConfirm,
     toggleFavorite,
@@ -214,10 +211,10 @@ const WeekendScheduled = () => {
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      (lead.name?.toLowerCase() || '').includes(searchLower) ||
-      String(lead.phone || '').includes(searchQuery) ||
-      (lead.purpose?.toLowerCase() || '').includes(searchLower) ||
-      (lead.remarks?.toLowerCase() || '').includes(searchLower)
+      (lead.name?.toLowerCase() || "").includes(searchLower) ||
+      String(lead.phone || "").includes(searchQuery) ||
+      (lead.purpose?.toLowerCase() || "").includes(searchLower) ||
+      (lead.remarks?.toLowerCase() || "").includes(searchLower)
     );
   });
 
@@ -320,13 +317,28 @@ const WeekendScheduled = () => {
         />
       )}
 
+      {/* Add ViewLeadModal */}
       {viewingLead && (
         <ViewLeadModal
           lead={viewingLead}
-          onClose={() => {
-            setViewingLead(null);
-          }}
+          onClose={() => setViewingLead(null)}
           onRefresh={refreshLeads}
+        />
+      )}
+
+      {/* Keep existing modals */}
+      {editingLead && (
+        <EditLeadModal
+          lead={editingLead}
+          onClose={() => setEditingLead(null)}
+          onSave={handleEdit}
+        />
+      )}
+
+      {deleteConfirm && (
+        <DeleteLeadModal
+          onClose={() => setDeleteConfirm(null)}
+          onDelete={() => handleDelete(deleteConfirm)}
         />
       )}
     </div>

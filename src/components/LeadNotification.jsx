@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import api from "../services/api";
 
-const LeadNotification = () => {
+const Notification = () => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     // Load saved notifications from localStorage
     const savedNotifications = JSON.parse(
-      localStorage.getItem("leadNotifications") || "[]"
+      localStorage.getItem("Notifications") || "[]"
     );
     setNotifications(savedNotifications);
   }, []);
@@ -22,15 +23,13 @@ const LeadNotification = () => {
 
     // Update state and localStorage
     setNotifications(updatedNotifications);
-    localStorage.setItem(
-      "leadNotifications",
-      JSON.stringify(updatedNotifications)
-    );
+    localStorage.setItem("Notifications", JSON.stringify(updatedNotifications));
 
     // Send minimize request to backend
-    api
-      .put(`/notifications/${notificationId}/minimize`)
-      .catch((error) => console.error("Error minimizing notification:", error));
+    api.put(`/notifications/${notificationId}/minimize`).catch((error) => {
+      toast.error("Error minimizing notification");
+      console.error("Error minimizing notification:", error);
+    });
   };
 
   const handleMarkAsRead = async (notificationId) => {
@@ -44,10 +43,12 @@ const LeadNotification = () => {
       );
       setNotifications(updatedNotifications);
       localStorage.setItem(
-        "leadNotifications",
+        "Notifications",
         JSON.stringify(updatedNotifications)
       );
+      toast.success("Notification marked as read");
     } catch (error) {
+      toast.error("Error marking notification as read");
       console.error("Error marking notification as read:", error);
     }
   };
@@ -66,10 +67,6 @@ const LeadNotification = () => {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium">Reminder!</h3>
-                  <p className="text-gray-700">
-                    Lead: {notification.leadId?.name || "Unknown"}
-                  </p>
                   <p className="text-gray-600">
                     Purpose: {notification.leadId?.purpose || "Not specified"}
                   </p>
@@ -105,4 +102,4 @@ const LeadNotification = () => {
   );
 };
 
-export default LeadNotification;
+export default Notification;

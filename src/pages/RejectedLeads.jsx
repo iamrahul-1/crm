@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Table from "../components/Table";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
 import { FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -33,7 +33,9 @@ const RejectedLeads = () => {
       } catch (err) {
         setError("Failed to fetch rejected leads");
         setLoading(false);
-        toast.error("Failed to fetch rejected leads. Please try again later.");
+        toast.error("Failed to fetch rejected leads", {
+          description: "Please try again later",
+        });
       }
     };
 
@@ -49,9 +51,13 @@ const RejectedLeads = () => {
         )
       );
       setEditingLead(null);
-      toast.success("Lead updated successfully");
+      toast.success("Lead updated successfully", {
+        description: "Changes have been saved",
+      });
     } catch (err) {
-      toast.error("Failed to update lead");
+      toast.error("Failed to update lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
   };
 
@@ -66,20 +72,25 @@ const RejectedLeads = () => {
       [id]: isFavorite,
     }));
 
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`,
-    });
+    if (isFavorite) {
+      toast.success("Added to favorites");
+    } else {
+      toast.info("Removed from favorites");
+    }
   };
 
   const handleDelete = async (id) => {
     try {
       await api.delete(`/leads/${id}`);
       setLeads(leads.filter((lead) => lead._id !== id));
-      toast.success("Lead deleted successfully");
+      toast.success("Lead deleted successfully", {
+        description: "The lead has been permanently removed",
+      });
       setDeleteConfirm(null);
     } catch (err) {
-      toast.error("Failed to delete lead");
+      toast.error("Failed to delete lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
   };
 

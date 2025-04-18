@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../services/api";
 import { FiUser, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 

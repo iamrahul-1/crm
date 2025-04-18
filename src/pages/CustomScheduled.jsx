@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 import api from "../services/api";
 import EditLeadModal from "../components/EditLeadModal";
 import DeleteLeadModal from "../components/DeleteLeadModal";
@@ -45,20 +45,15 @@ const CustomScheduled = () => {
     try {
       setLoading(true);
       const formattedDate = formatDateToIST(selectedDate);
-      console.log("Selected Date:", selectedDate);
-      console.log("Formatted Date:", formattedDate);
-      console.log("API URL:", `/leads/schedule/custom/${formattedDate}?populate=createdBy`);
+      const response = await api.get(
+        `/leads/schedule/custom/${formattedDate}?populate=createdBy`
+      );
 
-      const response = await api.get(`/leads/schedule/custom/${formattedDate}?populate=createdBy`);
-      console.log("API Response:", response.data);
+      const updatedLeads = response.data.leads.map((lead) => ({
+        ...lead,
+        createdBy: lead.createdBy || { name: "Unknown" },
+      }));
 
-      const updatedLeads = response.data.leads.map((lead) => {
-        return {
-          ...lead,
-          createdBy: lead.createdBy || { name: 'Unknown' }
-        };
-      });
-      
       setLeads(updatedLeads);
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
@@ -66,10 +61,9 @@ const CustomScheduled = () => {
       console.error("API Error:", err);
       setError(err.response?.data?.message || "Failed to fetch leads");
       setLoading(false);
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to fetch leads. Please try again later."
-      );
+      toast.error("Failed to fetch leads", {
+        description: err.response?.data?.message || "Please try again later",
+      });
     }
   }, [selectedDate]);
 
@@ -90,22 +84,22 @@ const CustomScheduled = () => {
   const handleEdit = async (updatedData) => {
     try {
       const response = await api.put(`/leads/${editingLead._id}`, updatedData);
-
       const updatedLeads = leads.map((lead) => {
         if (lead._id === editingLead._id) {
-          return {
-            ...lead,
-            ...response.data.lead,
-          };
+          return { ...lead, ...response.data.lead };
         }
         return lead;
       });
 
       setLeads(updatedLeads);
       setEditingLead(null);
-      toast.success("Lead updated successfully");
+      toast.success("Lead updated successfully", {
+        description: "The changes have been saved",
+      });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update lead");
+      toast.error("Failed to update lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
   };
 
@@ -119,32 +113,33 @@ const CustomScheduled = () => {
 
   const toggleFavorite = (id, lead) => {
     const isFavorite = !lead.favourite;
-
     const updatedLeads = leads.map((l) => {
       if (l._id === id) {
-        return {
-          ...l,
-          favourite: isFavorite,
-        };
+        return { ...l, favourite: isFavorite };
       }
       return l;
     });
     setLeads(updatedLeads);
 
-    toast(isFavorite ? "Added to favorites" : "Removed from favorites", {
-      type: isFavorite ? "success" : "info",
-      toastId: `favorite-${id}`,
-    });
+    if (isFavorite) {
+      toast.success("Added to favorites");
+    } else {
+      toast.info("Removed from favorites");
+    }
   };
 
   const handleDelete = async (id) => {
     try {
       await api.delete(`/leads/${id}`);
       setLeads(leads.filter((lead) => lead._id !== id));
-      toast.success("Lead deleted successfully");
+      toast.success("Lead deleted successfully", {
+        description: "The lead has been permanently removed",
+      });
       setDeleteConfirm(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete lead");
+      toast.error("Failed to delete lead", {
+        description: err.response?.data?.message || "Please try again",
+      });
     }
   };
 

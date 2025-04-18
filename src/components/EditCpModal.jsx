@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { FiX, FiUser, FiBriefcase } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // Updated import
 
 const EditCpModal = ({ cp, onClose, onSave }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,9 +90,13 @@ const EditCpModal = ({ cp, onClose, onSave }) => {
 
       await onSave(dataToSend);
       onClose();
-      toast.success("Channel Partner updated successfully");
+      toast.success("Channel Partner updated successfully", {
+        description: "Changes have been saved",
+      });
     } catch (error) {
-      toast.error(error.message || "Failed to update channel partner");
+      toast.error("Failed to update channel partner", {
+        description: error.message || "Please try again later",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FiAlertCircle, FiLoader } from "react-icons/fi";
+import { toast } from "sonner";
 
-const DeleteLeadModal = ({ onClose, onDelete }) => {
+const DeleteLeadModal = ({ onClose, onDelete, leadName }) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
       await onDelete();
+      toast.success("Lead deleted successfully", {
+        description: `${leadName || 'The lead'} has been permanently removed`
+      });
     } catch (error) {
       console.error('Delete failed:', error);
+      toast.error("Failed to delete lead", {
+        description: error.response?.data?.message || "Please try again"
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -18,7 +25,7 @@ const DeleteLeadModal = ({ onClose, onDelete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-full-sm w-full mx-4 shadow-xl transform transition-all">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl transform transition-all">
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
           <FiAlertCircle className="w-6 h-6 text-red-600" />
         </div>
@@ -26,7 +33,7 @@ const DeleteLeadModal = ({ onClose, onDelete }) => {
           Delete Lead
         </h3>
         <p className="text-gray-500 text-center mb-6">
-          Are you sure you want to delete this lead? This action cannot be undone.
+          Are you sure you want to delete {leadName ? <strong>{leadName}</strong> : 'this lead'}? This action cannot be undone.
         </p>
         <div className="flex items-center gap-3">
           <button
@@ -59,6 +66,7 @@ const DeleteLeadModal = ({ onClose, onDelete }) => {
 DeleteLeadModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  leadName: PropTypes.string,
 };
 
 export default DeleteLeadModal;

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FiX, FiUser, FiPhone, FiCalendar, FiSearch } from "react-icons/fi";
 import PropTypes from "prop-types";
 import LoadingButton from "./LoadingButton";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import api from "../services/api";
 
 const EditLeadModal = ({ lead, onClose, onSave }) => {
@@ -25,7 +25,9 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
         setCpOptions(options);
       } catch (error) {
         console.error("Error fetching CPs:", error);
-        toast.error("Failed to fetch channel partners");
+        toast.error("Failed to fetch channel partners", {
+          description: "Please try again or contact support if the issue persists"
+        });
         setCpOptions([]); // Set empty array on error
       } finally {
         setLoadingCps(false);
@@ -126,6 +128,9 @@ const EditLeadModal = ({ lead, onClose, onSave }) => {
       await onSave(dataToSend);
     } catch (error) {
       console.error("Failed to save:", error);
+      toast.error("Failed to save changes", {
+        description: "Please try again or contact support if the issue persists"
+      });
     } finally {
       setIsSubmitting(false);
     }
