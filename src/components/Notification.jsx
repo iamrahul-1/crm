@@ -3,15 +3,29 @@ import { BellIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { toast } from "sonner";
 import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Check if user is logged in
+  const isLoggedIn = () => {
+    return localStorage.getItem('token'); // Adjust based on your auth state
+  };
 
   // Fetch only notifications
   const fetchNotifications = async () => {
     try {
+      if (!isLoggedIn()) {
+        // If not logged in, clear notifications and unread count
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+
       const response = await api.get("/notifications/");
       const notifications = response.data.map(notification => ({
         id: notification._id,
@@ -32,18 +46,49 @@ const Notification = () => {
       setUnreadCount(sortedNotifications.filter(n => !n.isRead).length);
     } catch (error) {
       console.error("Error fetching notifications:", error);
-      toast.error("Failed to fetch notifications", {
-        description: error.response?.data?.message || "Please try again"
-      });
+      if (error.response?.status === 401) {
+        // If unauthorized, clear notifications and navigate to login
+        setNotifications([]);
+        setUnreadCount(0);
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        toast.error("Failed to fetch notifications", {
+          description: error.response?.data?.message || "Please try again"
+        });
+      }
     }
   };
 
   useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every minute
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    if (isLoggedIn()) {
+      // Initial fetch
+      fetchNotifications();
+      
+      // Poll for new notifications every minute only if logged in
+      const interval = setInterval(fetchNotifications, 60000);
+      
+      // Trigger cron job to update notifications on backend
+      const triggerCron = async () => {
+        try {
+          const response = await fetch('/api/notifications/cron');
+          if (!response.ok) {
+            console.error('Failed to trigger cron job');
+          }
+        } catch (error) {
+          console.error('Error triggering cron job:', error);
+        }
+      };
+      
+      // Trigger cron job every 5 minutes
+      const cronInterval = setInterval(triggerCron, 300000);
+      
+      return () => {
+        clearInterval(interval);
+        clearInterval(cronInterval);
+      };
+    }
+  }, [isLoggedIn]);
 
   const handleMarkAsRead = async (id) => {
     try {

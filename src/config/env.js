@@ -1,6 +1,6 @@
 const env = {
   development: {
-    apiUrl: "http://localhost:5000/api",
+    apiUrl: "https://brookstone-backend.vercel.app/api",
   },
   production: {
     apiUrl: "https://brookstone-backend.vercel.app/api",

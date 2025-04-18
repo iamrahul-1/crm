@@ -28,7 +28,6 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100 text-black">
-        <Notification />
         <Toaster richColors position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -41,6 +40,7 @@ function App() {
                 <>
                   <Header />
                   <Navigation />
+                  <Notification />
                   <Routes>
                     <Route path="/" element={<PieChart />} />
                     <Route path="/leads/add" element={<AddLeads />} />
